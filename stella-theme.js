@@ -15,6 +15,10 @@ const st=document.createElement('style');st.dataset.stella='global';st.textConte
 '@media (prefers-reduced-motion:reduce){.stl-hero .stl-lens{transition:none}}'+
 /* Japanese titles break at phrase boundaries instead of mid-word */
 '.entry-title,.stl-row h3,.stl-feature h3,.stl-next h2,.stl-ar h2{word-break:auto-phrase}'+
+/* the hidden HD-2D panel: a small star glints twice on Stella's shoulder, a hint that she can be touched */
+'.egg-spot::after{content:"";position:absolute;right:-4px;top:-6px;width:9px;height:9px;background:#bef8ff;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 4px #46ecff);opacity:0;pointer-events:none;animation:stl-glint 1.4s steps(7,end) 2.5s 2}'+
+'@keyframes stl-glint{0%,100%{opacity:0;transform:scale(.4)}40%{opacity:1;transform:scale(1.15)}70%{opacity:.6;transform:scale(.8)}}'+
+'@media (prefers-reduced-motion:reduce){.egg-spot::after{animation:none}}'+
 /* phones: on the short article band the tagline would be too small to read, so the logo stands alone */
 '@media (max-width:560px){body.page-entry .stl-tag{display:none}}'+
 /* Hatena's white widgets, recoloured for the night: the add-star button and the sidebar "subscribe" button */
@@ -243,6 +247,10 @@ const ALLEY_SRC={"W":480,"H":360,"near":"data:image/png;base64,iVBORw0KGgoAAAANS
 /* ================= footer: the alley at the bottom of the city (AI-generated key visual, re-pixelated to the header's 32 colours) =================
    Scrolling down the page descends from the sky to the street. Two layers: far (sky + skyline) and near (everything else),
    the far layer lags behind for depth. The ad sits on the billboard screen and powers on once it reaches the middle. */
+/* 5×7 dot font for the billboard ticker (only the letters it needs; "*" is a small amber star) */
+const TICK=(()=>{const G={A:".###.|#...#|#...#|#####|#...#|#...#|#...#",C:".###.|#...#|#....|#....|#....|#...#|.###.",E:"#####|#....|#....|####.|#....|#....|#####",H:"#...#|#...#|#...#|#####|#...#|#...#|#...#",K:"#...#|#..#.|#.#..|##...|#.#..|#..#.|#...#",L:"#....|#....|#....|#....|#....|#....|#####",N:"#...#|##..#|#.#.#|#..##|#...#|#...#|#...#",O:".###.|#...#|#...#|#...#|#...#|#...#|.###.",P:"####.|#...#|#...#|####.|#....|#....|#....",R:"####.|#...#|#...#|####.|#.#..|#..#.|#...#",S:".####|#....|#....|.###.|....#|....#|####.",T:"#####|..#..|..#..|..#..|..#..|..#..|..#..",U:"#...#|#...#|#...#|#...#|#...#|#...#|.###.",",":"..|..|..|..|..|.#|#.",".":".|.|.|.|.|.|#","*":".....|..#..|..#..|#####|..#..|..#..|....."," ":"...|...|...|...|...|...|..."};
+  const px=[];let x=0;for(const ch of "LOOK UP, THEN LOOK CLOSER.   *   STELLA   *   "){const g=G[ch].split("|");g.forEach((row,y)=>[...row].forEach((c,i)=>{if(c==="#")px.push([x+i,y,ch==="*"?1:0])}));x+=g[0].length+1}
+  return{px,w:x}})();
 function AlleyFooter(sec,SRC){
   const W=SRC.W,H=SRC.H,$$=q=>sec.querySelector(q);
   const cam=$$("#stl-alley-cam"),cv=$$("#px-alley"),dv=$$("#px-alley-dof"),gv=$$("#px-alley-glow"),ad=$$("#stl-ad"),slot=$$("#ad-slot");
@@ -346,7 +354,9 @@ function AlleyFooter(sec,SRC){
     // billboard: standby picture until the ad powers on, then a steady neon hum
     const on=state.ad&&!below,[sx,sy,sw,sh]=SRC.screen,cx=sx+sw/2,cy=sy+sh/2;
     if(!on){const sl=sy+Math.floor(t*10)%sh;P(ctx,sx,sl,"#1e3a8a",.55,sw,1);const a=.35+.25*Math.sin(t*1.6);
-      P(ctx,cx-4,cy,"#46ecff",a,9,1);P(ctx,cx,cy-4,"#46ecff",a,1,9);P(ctx,cx-1,cy-1,"#bef8ff",a,3,3);P(gtx,cx-3,cy-3,"#46ecff",a*.5,7,7)}
+      // standby: an LED ticker runs the motto across the screen, one dot at a time (the ad itself, when set, never moves)
+      const run=TICK.w+sw,pos=sx+sw-(Math.floor(t*12)%run),y0=Math.round(cy-3);
+      for(const[x,y,k]of TICK.px){const X=pos+x;if(X<sx||X>=sx+sw)continue;const col=k?"#ffb347":"#46ecff";P(ctx,X,y0+y,col,.8+.2*a);P(gtx,X,y0+y,col,.5)}}
     for(const[x,y]of SRC.frame)P(gtx,x,y,"#46ecff",.42);   // the billboard frame: a steady neon glow
     // steam: the painted plume stays in place; light bands drift up through it (palette cycling, 8 fps like the other sprites)
     if(fx.particles&&A.steam.length){const ts=Math.floor(t*8)/8;for(const p of A.steam){const v=Math.sin(p.y*.55+ts*2.6+Math.sin(p.x*.45+ts*.8)*1.3+p.n*.25);
@@ -650,7 +660,7 @@ const catKey = name => CAT[name] || "ai";
 
 /* ---------- CSS（デザインCSS 欄を増やさないよう、ここで入れる） ---------- */
 const css = `
-:root{--line2:#3a3460;--dim:#7a7eaa;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
+:root{--line2:#3a3460;--dim:#8b8fbb;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
 .c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
 body.stl-art{--c:var(--cyan)}
 .stl-art article.entry{max-width:76rem;margin-inline:auto}
@@ -959,7 +969,7 @@ const keyOf = name => KEYS.find(k => CAT[k][0] === name) || "ai";
 const jst = d => d.toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
 
 const css = `
-:root{--line2:#3a3460;--dim:#7a7eaa;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
+:root{--line2:#3a3460;--dim:#8b8fbb;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
 .c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
 body.stl-top #main-inner>article.entry,body.stl-top #main-inner>.pager{display:none}
 .stl-tp{max-width:76rem;margin:0 auto}
@@ -1060,7 +1070,7 @@ async function loadFeed() {
 /* ---------- pixel photo: dim pixels at rest, resolves when looked at (drawImage only; CDN has no CORS) ---------- */
 function PixPhoto(box, src, owner, { auto = false } = {}) {
   const c = el("canvas"); box.prepend(c); const x = c.getContext("2d"), t = document.createElement("canvas"), tx = t.getContext("2d");
-  const REST = 14; let img = null, size = REST, target = REST, timer = null;
+  const REST = 7; let img = null, size = REST, target = REST, timer = null;
   function fit() { const r = box.getBoundingClientRect(); c.width = Math.max(1, Math.round(r.width)); c.height = Math.max(1, Math.round(r.height)); draw(); }
   function draw() {
     if (!img) return; const w = c.width, h = c.height;
@@ -1219,7 +1229,7 @@ const KEYS = Object.keys(CAT);
 const keyOf = name => KEYS.find(k => CAT[k][0] === name) || "ai";
 
 const css = `
-:root{--line2:#3a3460;--dim:#7a7eaa;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
+:root{--line2:#3a3460;--dim:#8b8fbb;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
 .c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
 body.stl-arc #main-inner>.archive-header-category,body.stl-arc #main-inner>.archive-entries-sort,body.stl-arc .archive-entries>section{display:none}
 .stl-ar{max-width:76rem;margin:0 auto}
@@ -1300,7 +1310,7 @@ B.classList.add("stl-arc");
 /* ---------- pixel photo (same as the top page: dots at rest, focus when looked at) ---------- */
 function PixPhoto(box, src, owner) {
   const c = el("canvas"); box.prepend(c); const x = c.getContext("2d"), t = document.createElement("canvas"), tx = t.getContext("2d");
-  const REST = 14; let img = null, size = REST, target = REST, timer = null;
+  const REST = 7; let img = null, size = REST, target = REST, timer = null;
   function fit() { const r = box.getBoundingClientRect(); c.width = Math.max(1, Math.round(r.width)); c.height = Math.max(1, Math.round(r.height)); draw(); }
   function draw() {
     if (!img) return; const w = c.width, h = c.height;
@@ -1361,4 +1371,85 @@ st.textContent = `.entry-footer .social-buttons{display:none!important}
 .stl-share a:hover,.stl-share button:hover,.stl-share a:focus-visible,.stl-share button:focus-visible{color:var(--cyan);border-color:var(--cyan);box-shadow:0 0 14px rgba(70,236,255,.18)}
 .stl-share button.ok{color:var(--cyan);border-color:var(--cyan)}`;
 document.head.appendChild(st);
+})();
+
+/* Stella — About：左に観測者カード（アイコン・数字・カテゴリ）、右に本文。
+   本文ははてなの「aboutページ編集」に HTML で書いた .stl-about。はてなが出すプロフィールと数字（dl）はカードに移す。 */
+(() => {
+"use strict";
+const B = document.body;
+if (!B.classList.contains("page-about")) return;
+const main = document.querySelector("#main-inner");
+if (!main || main.dataset.stl) return;
+main.dataset.stl = "1";
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const CAT = { ai: ["AI・データ", "#46ecff"], work: ["仕事の仕組み", "#ffb347"], make: ["つくる", "#ff4fa8"], run: ["走る", "#ffd896"], photo: ["撮る", "#b48cff"] };
+const KEYS = Object.keys(CAT);
+
+const art = $("article.entry", main), text = $(".stl-about", main), dl = $(".entry-content dl", main);
+/* the numbers Hatena shows (posts, days, readers) */
+const LAB = { "ブログ投稿数": "投稿数", "ブログ投稿日数": "投稿日数", "読者": "読者" };
+const stats = [];
+if (dl) for (const dt of $$("dt", dl)) { const k = dt.textContent.trim(), dd = dt.nextElementSibling; if (LAB[k] && dd) stats.push([LAB[k], dd.textContent.trim().replace(/\s+/g, " ")]); }
+const ic = dl && $("img.profile-icon", dl);
+const icon = ic ? ic.src.replace(/\/profile\.(png|gif|jpg)/, "/profile_128x128.$1") : "";
+const nickEl = dl && $(".user-name-nickname", dl);
+const nick = nickEl ? nickEl.textContent.trim() : "Stella";
+const prof = dl && $('a[href*="profile.hatena.ne.jp"]', dl), idEl = dl && $(".user-name-hatena-id", dl);
+
+const css = `
+:root{--line2:#3a3460;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
+.c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
+body.stl-abt #main-inner>article.entry{display:none}
+.stl-ab{max-width:76rem;margin:0 auto}
+.stl-ab .head{padding-block:56px 18px;border-bottom:1px solid var(--line)}
+.stl-ab .head h1{margin:0;font-family:var(--f-pixel);font-weight:400;font-size:clamp(22px,3vw,30px);line-height:1.4;letter-spacing:.06em;color:var(--white)}
+.stl-ab .head h1 small{display:block;font-size:11.5px;letter-spacing:.24em;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
+.stl-ab .grid{display:grid;grid-template-columns:17rem minmax(0,40rem);gap:clamp(32px,6vw,96px);padding-block:48px 24px;align-items:start}
+.stl-ab .card{position:sticky;top:24px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(18,16,31,.92),rgba(11,10,20,.55));padding:26px 24px 24px}
+.stl-ab .ava{position:relative;display:block;width:128px;height:128px;margin:0 0 20px;background:#06050d}
+.stl-ab .ava img{display:block;width:100%;height:100%;image-rendering:pixelated;animation:stl-ab-scan .7s steps(8,end) .15s both}
+@keyframes stl-ab-scan{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+.stl-ab .ava::before,.stl-ab .ava::after{content:"";position:absolute;width:12px;height:12px;border:2px solid var(--cyan);pointer-events:none}
+.stl-ab .ava::before{left:-7px;top:-7px;border-right:0;border-bottom:0}.stl-ab .ava::after{right:-7px;bottom:-7px;border-left:0;border-top:0}
+.stl-ab .nm{margin:0;font-family:var(--f-pixel);font-size:22px;line-height:1.3;letter-spacing:.08em;color:var(--white)}
+.stl-ab .mt{margin:.4em 0 0;font-family:var(--f-mono);font-size:12px;letter-spacing:.04em}.stl-ab .mt a{color:var(--muted);text-decoration:none}.stl-ab .mt a:hover{color:var(--cyan)}
+.stl-ab .st{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:20px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.7}
+.stl-ab .st dt{font-family:var(--f-pixel);letter-spacing:.1em;color:var(--muted)}
+.stl-ab .st dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;color:var(--white)}
+.stl-ab .cats{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.stl-ab .cats a{font-family:var(--f-pixel);font-size:12.5px;letter-spacing:.1em;color:#b9bcdc;text-decoration:none;display:inline-flex;align-items:center;gap:8px;padding:2px 0}
+.stl-ab .cats a::before{content:"";width:6px;height:6px;background:var(--c);box-shadow:0 0 8px var(--c)}
+.stl-ab .cats a:hover{color:var(--white);box-shadow:inset 0 -2px 0 var(--c)}
+.stl-ab .txt{min-width:0}
+.stl-ab .stl-about>*{margin:0}
+.stl-ab .stl-about .lead{font-size:clamp(18px,2.2vw,22px);line-height:1.9;font-weight:500;color:var(--white)}
+.stl-ab .stl-about .motto{margin-top:28px;padding:10px 0 10px 18px;border-left:2px solid var(--magenta);font-family:var(--f-pixel);font-size:clamp(16px,2vw,20px);letter-spacing:.14em;color:var(--cyan);text-shadow:0 0 14px rgba(70,236,255,.45)}
+.stl-ab .stl-about h3{display:flex;align-items:center;gap:10px;margin-top:64px;padding-bottom:10px;border-bottom:1px solid var(--line);font-family:var(--f-pixel);font-weight:400;font-size:13px;letter-spacing:.2em;color:var(--muted)}
+.stl-ab .stl-about h3::before{content:"";width:6px;height:6px;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.stl-ab .stl-about p{font-size:16px;line-height:2.05;color:var(--text);word-break:auto-phrase}
+.stl-ab .stl-about h3+p{margin-top:22px}.stl-ab .stl-about p+p{margin-top:1.3em}
+.stl-ab .stl-about p.motto{margin-top:28px}
+@media (max-width:820px){
+  .stl-ab .grid{grid-template-columns:1fr;gap:40px;padding-top:32px}
+  .stl-ab .card{position:static;display:grid;grid-template-columns:96px minmax(0,1fr);gap:4px 20px;align-items:center;padding:20px}
+  .stl-ab .ava{width:96px;height:96px;margin:0;grid-row:span 2}
+  .stl-ab .st,.stl-ab .cats{grid-column:1/-1}
+}
+@media (prefers-reduced-motion:reduce){.stl-ab .ava img{animation:none}}
+`;
+document.head.appendChild(Object.assign(document.createElement("style"), { textContent: css })).dataset.stella = "about";
+
+const wrap = document.createElement("section");
+wrap.className = "stl-ab";
+wrap.setAttribute("aria-labelledby", "stl-h-ab");
+wrap.innerHTML = `<div class="head"><h1 id="stl-h-ab"><small>About</small>このブログについて</h1></div>
+<div class="grid"><aside class="card" aria-label="プロフィール">${icon ? `<span class="ava"><img src="${esc(icon)}" alt="${esc(nick)}のアイコン" width="128" height="128"></span>` : ""}<div><p class="nm">${esc(nick)}</p>${prof && idEl ? `<p class="mt"><a href="${esc(prof.href)}">${esc(idEl.textContent.trim())}</a></p>` : ""}</div>
+${stats.length ? `<dl class="st">${stats.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : ""}
+<nav class="cats" aria-label="カテゴリ">${KEYS.map(k => `<a class="c-${k}" href="/archive/category/${encodeURIComponent(CAT[k][0])}">${CAT[k][0]}</a>`).join("")}</nav></aside>
+<div class="txt"></div></div>`;
+if (text) $(".txt", wrap).appendChild(text);
+main.prepend(wrap);
+B.classList.add("stl-abt");
 })();

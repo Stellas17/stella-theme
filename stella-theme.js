@@ -1015,6 +1015,7 @@ const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls)
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const CAT = { ai: ["AI・データ", "#46ecff"], work: ["仕事の仕組み", "#ffb347"], make: ["つくる", "#ff4fa8"], run: ["走る", "#ffd896"], photo: ["撮る", "#b48cff"] };
 const KEYS = Object.keys(CAT);
+const SHORT = { ai: "AI", work: "仕事", make: "つくる", run: "走る", photo: "撮る" };   // lane labels on phones
 const keyOf = name => KEYS.find(k => CAT[k][0] === name) || "ai";
 const jst = d => d.toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
 
@@ -1042,6 +1043,7 @@ body.stl-top #main-inner>article.entry,body.stl-top #main-inner>.pager{display:n
 .stl-tp .cats button span{font-family:var(--f-mono);font-size:11.5px;font-weight:400;color:var(--dim)}
 /* sky map */
 .stl-sky{position:relative;margin-top:8px;height:clamp(300px,34vw,400px)}
+@media (max-width:600px){.stl-sky{height:200px}.stl-tp .head{padding-block:44px 16px}.stl-pick{margin-top:12px}}
 .stl-sky canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .stl-pick{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:14px 40px;margin-top:16px;padding:18px 20px 18px 22px;border:1px solid var(--line);border-left:2px solid var(--c);background:linear-gradient(90deg,color-mix(in srgb,var(--c) 8%,rgba(18,16,31,.92)),rgba(11,10,20,.35) 70%)}
 .stl-pick .in{min-width:0}
@@ -1174,7 +1176,7 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
 
   /* latest */
   const f0 = posts[0], rest = posts.slice(1, 7);
-  const latest = el("section", "", `<div class="head"><h2 id="stl-h-latest"><small>Latest</small>新しい記事</h2><p>写真はふだんドットのまま、見ようとするとピントが合います。「撮る」の写真だけは、最初からそのまま。</p></div>
+  const latest = el("section", "", `<div class="head"><h2 id="stl-h-latest"><small>Latest</small>新しい記事</h2></div>
 <a href="${esc(f0.url)}" class="stl-feature c-${f0.k}"><span class="stl-pix"><span class="stl-vf"></span></span><span><span class="meta"><span class="tag">${esc(f0.cat || CAT[f0.k][0])}</span><time datetime="${jst(f0.d)}">${jst(f0.d)}</time><span>${f0.len} 分</span></span><h3>${esc(f0.t)}</h3><p>${esc(f0.desc.slice(0, 110))}${f0.desc.length > 110 ? "…" : ""}</p><span class="go">読む<i></i></span></span></a>
 <ol class="stl-rows" aria-label="これまでの記事">${rest.map((p, i) => `<li class="stl-row stl-reveal c-${p.k}" data-k="${p.k}"><a href="${esc(p.url)}"><span class="no">No.${String(posts.length - 1 - i).padStart(3, "0")}</span><span style="min-width:0"><span class="meta"><span class="tag">${esc(p.cat || CAT[p.k][0])}</span><time datetime="${jst(p.d)}">${jst(p.d)}</time><span>${p.len} 分</span></span><h3>${esc(p.t)}</h3><p>${esc(p.desc)}</p></span><span class="stl-pix"><span class="stl-vf"></span></span></a></li>`).join("")}</ol>
 <div class="stl-more"><a href="/archive">記事一覧へ</a></div>`);
@@ -1197,7 +1199,7 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
   function layout() {
     const r = sky.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
     sc.width = r.width * dpr; sc.height = r.height * dpr; sx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const W = r.width, H = r.height, padL = W < 600 ? 16 : 110, padR = 40, top = 26, bot = 40, lane = (H - top - bot) / KEYS.length;
+    const W = r.width, H = r.height, padL = W < 600 ? 54 : 110, padR = W < 600 ? 22 : 40, top = W < 600 ? 18 : 26, bot = W < 600 ? 34 : 40, lane = (H - top - bot) / KEYS.length;
     const used = {};
     posts.slice().reverse().forEach(p => {
       // x = order of publication, so stars never pile up when posts are close in time (dates are shown by the month ticks)
@@ -1218,7 +1220,7 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
     const step = REDUCE ? 0 : Math.floor(t * 10) / 10;
     for (const [a, b, c] of dust) { const tw = .25 + .25 * Math.sin(step * 1.3 + c * 40); sx.fillStyle = `rgba(200,210,255,${tw * .5})`; sx.fillRect(Math.round(a), Math.round(b), 1, 1); }
     sx.font = "12px DotGothic16, monospace"; sx.textBaseline = "middle";
-    KEYS.forEach((k, i) => { const y = top + lane * (i + .5), on = !filter || filter === k; sx.fillStyle = on ? CAT[k][1] : "#6b6f99"; sx.globalAlpha = on ? .9 : .8; if (W >= 600) sx.fillText(CAT[k][0], 16, y); sx.globalAlpha = 1;
+    KEYS.forEach((k, i) => { const y = top + lane * (i + .5), on = !filter || filter === k; sx.fillStyle = on ? CAT[k][1] : "#6b6f99"; sx.globalAlpha = on ? .9 : .8; sx.fillText(W >= 600 ? CAT[k][0] : SHORT[k], W >= 600 ? 16 : 0, y); sx.globalAlpha = 1;
       sx.strokeStyle = "rgba(58,52,96,.35)"; sx.setLineDash([2, 6]); sx.beginPath(); sx.moveTo(padL, y); sx.lineTo(W - padR, y); sx.stroke(); sx.setLineDash([]); });
     // month ticks
     sx.font = "10.5px 'JetBrains Mono', monospace"; sx.fillStyle = "#7a7eaa"; sx.textBaseline = "alphabetic";
@@ -1271,15 +1273,14 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
   }
   const step = d => { const L = lit(), j = L.indexOf(sel), k = L[Math.max(0, Math.min(L.length - 1, j + d))]; if (k != null && k !== sel) show(k); };
   pv.addEventListener("click", () => step(-1)); nx.addEventListener("click", () => step(1));
-  // mouse: pointing at a star selects it and a click opens it. touch: the first tap selects, a second tap on the same star opens it
+  // a star is only ever selected (mouse click or tap); the article opens from the panel's title or 読む. Pointing at a star just lights it
   sc.addEventListener("pointermove", e => {
     if (e.pointerType === "touch") return;
     const i = pick(e); hover = i; sc.style.cursor = i >= 0 ? "pointer" : "default";
-    if (i >= 0 && i !== sel) show(i);
     if (REDUCE) draw(0);
   });
   sc.addEventListener("pointerleave", () => { hover = -1; if (REDUCE) draw(0); });
-  sc.addEventListener("click", e => { const i = pick(e); if (i < 0) return; if (i === sel) location.href = posts[i].url; else show(i); });
+  sc.addEventListener("click", e => { const i = pick(e); if (i >= 0 && i !== sel) show(i); });
   $(".stl-legend", skySec).innerHTML = `<span>${jst(posts[posts.length - 1].d)}</span><span>${posts.length} 本・星の大きさは読む時間</span><span>${jst(f0.d)}</span>`;
   // category filter: light one constellation, dim the rows of other categories, and move the panel to that category's newest post
   $$(".cats button", skySec).forEach(b => b.addEventListener("click", () => {
@@ -1441,10 +1442,11 @@ const box = document.createElement("div");
 box.className = "stl-share";
 box.setAttribute("role", "group");
 box.setAttribute("aria-label", "この記事を共有");
-box.innerHTML = `<span class="lab">Share</span><a href="${esc(xHref)}" target="_blank" rel="noopener">X でポスト</a><a href="${esc(bHref)}" target="_blank" rel="noopener">B! ブックマーク</a><button type="button">リンクをコピー</button>`;
+box.innerHTML = `<span class="lab">Share</span><a href="${esc(xHref)}" target="_blank" rel="noopener"><span class="lf">X でポスト</span><span class="ls">Xでポスト</span></a><a href="${esc(bHref)}" target="_blank" rel="noopener"><span class="lf">B! ブックマーク</span><span class="ls">ブックマーク</span></a><button type="button"><span class="lf">リンクをコピー</span><span class="ls">コピー</span></button>`;
 const cp = box.querySelector("button");
 cp.addEventListener("click", () => {
-  const done = ok => { cp.textContent = ok ? "コピーしました" : "コピーできませんでした"; cp.classList.toggle("ok", ok); setTimeout(() => { cp.textContent = "リンクをコピー"; cp.classList.remove("ok"); }, 1800); };
+  const lab = (l, s) => { cp.querySelector(".lf").textContent = l; cp.querySelector(".ls").textContent = s; };
+  const done = ok => { if (ok) lab("コピーしました", "コピー済み"); else lab("コピーできませんでした", "失敗"); cp.classList.toggle("ok", ok); setTimeout(() => { lab("リンクをコピー", "コピー"); cp.classList.remove("ok"); }, 1800); };
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(() => done(true), () => done(false));
   else done(false);
 });
@@ -1456,7 +1458,9 @@ st.textContent = `.entry-footer .social-buttons{display:none!important}
 .stl-share .lab{font-family:var(--f-pixel);font-size:11px;letter-spacing:.24em;color:var(--muted);text-transform:uppercase;margin-right:4px}
 .stl-share a,.stl-share button{font:inherit;font-family:var(--f-body);font-size:14px;letter-spacing:.04em;line-height:1.4;color:#c9cce8;background:none;border:1px solid var(--line2);padding:8px 14px;text-decoration:none;cursor:pointer}
 .stl-share a:hover,.stl-share button:hover,.stl-share a:focus-visible,.stl-share button:focus-visible{color:var(--cyan);border-color:var(--cyan);box-shadow:0 0 14px rgba(70,236,255,.18)}
-.stl-share button.ok{color:var(--cyan);border-color:var(--cyan)}`;
+.stl-share button.ok{color:var(--cyan);border-color:var(--cyan)}
+.stl-share .ls{display:none}
+@media (max-width:560px){.stl-share{flex-basis:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.stl-share .lab{grid-column:1/-1;margin:0}.stl-share a,.stl-share button{text-align:center;padding:10px 4px;white-space:nowrap}.stl-share .lf{display:none}.stl-share .ls{display:inline}}`;
 document.head.appendChild(st);
 })();
 
@@ -1524,6 +1528,15 @@ body.stl-abt #main-inner>article.entry{display:none}
   .stl-ab .ava{width:96px;height:96px;margin:0;grid-row:span 2}
   .stl-ab .st,.stl-ab .cats{grid-column:1/-1}
 }
+.stl-ab .cats.after{display:none}
+@media (max-width:600px){
+  .stl-ab .grid{gap:28px;padding-top:24px}
+  .stl-ab .card{grid-template-columns:56px minmax(0,1fr);gap:2px 14px;padding:14px 16px;border:0;border-bottom:1px solid var(--line);background:none}
+  .stl-ab .ava{width:56px;height:56px}.stl-ab .ava::before,.stl-ab .ava::after{width:8px;height:8px;border-width:1px}
+  .stl-ab .nm{font-size:18px}
+  .stl-ab .card .cats{display:none}
+  .stl-ab .cats.after{display:flex;margin-top:40px}
+}
 @media (prefers-reduced-motion:reduce){.stl-ab .ava img{animation:none}}
 `;
 document.head.appendChild(Object.assign(document.createElement("style"), { textContent: css })).dataset.stella = "about";
@@ -1537,6 +1550,8 @@ ${stats.length ? `<dl class="st">${stats.map(([k, v]) => `<dt>${esc(k)}</dt><dd>
 <nav class="cats" aria-label="カテゴリ">${KEYS.map(k => `<a class="c-${k}" href="/archive/category/${encodeURIComponent(CAT[k][0])}">${CAT[k][0]}</a>`).join("")}</nav></aside>
 <div class="txt"></div></div>`;
 if (text) $(".txt", wrap).appendChild(text);
+// phones: the categories come after the introduction instead of inside the card
+$(".txt", wrap).insertAdjacentHTML("beforeend", `<nav class="cats after" aria-label="カテゴリ">${KEYS.map(k => `<a class="c-${k}" href="/archive/category/${encodeURIComponent(CAT[k][0])}">${CAT[k][0]}</a>`).join("")}</nav>`);
 main.prepend(wrap);
 B.classList.add("stl-abt");
 })();

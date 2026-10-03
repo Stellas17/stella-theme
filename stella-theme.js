@@ -398,6 +398,7 @@ const LOGO_IMG="data:image/webp;base64,UklGRkZdAABXRUJQVlA4IDpdAADQxgGdASqYA9ABP
 function ImageLogo(a){
   const label=a.textContent.trim()||"Stella";
   a.textContent="";a.classList.add("stl-neon","stl-neon-img");
+  Object.assign(a.style,{display:"block",marginLeft:"auto"});   // a block, so the title line adds no text descender under the sign
   const sr=document.createElement("span");sr.className="stl-sr";sr.textContent=label;
   const c=document.createElement("canvas");c.setAttribute("aria-hidden","true");
   Object.assign(c.style,{imageRendering:"auto",width:"100%",height:"auto"});
@@ -454,8 +455,24 @@ function ImageLogo(a){
     a.style.width=w+"px";
     const dpr=Math.min(2,devicePixelRatio||1);
     if(W0){c.width=Math.round(w*dpr);c.height=Math.round(w*dpr*H0/W0);}
-    dirty=true;draw();
+    fitTag(w);dirty=true;draw();
   }
+  /* the tagline spans exactly the lit tubes: from the left edge of the "S" to the end of the "a" */
+  const TUBE_L=.05,TUBE_R=.96;
+  function fitTag(w){
+    const tag=a.closest(".stl-brand")&&a.closest(".stl-brand").querySelector(".stl-tag");
+    if(!tag||!tag.firstChild)return;
+    tag.style.whiteSpace="nowrap";tag.style.fontSize="100px";tag.style.marginRight="0px";
+    const rg=document.createRange();rg.selectNodeContents(tag);
+    const ls=parseFloat(getComputedStyle(tag).letterSpacing)||0;            // the last letter carries spacing too
+    const raw=rg.getBoundingClientRect().width-ls;if(!(raw>0))return;
+    const fs=100*w*(TUBE_R-TUBE_L)/raw;
+    tag.style.fontSize=fs.toFixed(2)+"px";
+    tag.style.marginRight=(w*(1-TUBE_R)-ls*fs/100).toFixed(2)+"px";
+    const h=w*(H0&&W0?H0/W0:.504);                                          // pull it up past the glow under the tubes
+    tag.style.marginTop=(.6*fs-.09*h).toFixed(2)+"px";
+  }
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>layout());
   function build(img,pm){
     W0=img.naturalWidth;H0=img.naturalHeight;
     const t=document.createElement("canvas");t.width=W0;t.height=H0;const tx=t.getContext("2d",{willReadFrequently:true});

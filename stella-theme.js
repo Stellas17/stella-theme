@@ -1,7 +1,11 @@
 /* Stella theme for Hatena Blog — header (title-below HTML) + footer (footer HTML).
    Pixel art: AI-generated key visuals re-pixelated to 32 colours. Loads after the markup in the footer HTML. */
 (function(){if(!document.querySelector('link[data-stella-fonts]')){const l=document.createElement('link');l.rel='stylesheet';l.dataset.stellaFonts='1';
-l.href='https://fonts.googleapis.com/css2?family=DotGothic16&family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap';document.head.appendChild(l)}})();
+l.href='https://fonts.googleapis.com/css2?family=DotGothic16&family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap';document.head.appendChild(l)}
+/* article pages: the city becomes a short band so the title is on the first screen; the sidebar keeps only profile, search and archive */
+const st=document.createElement('style');st.dataset.stella='global';st.textContent=
+'body.page-entry .stl-hero{height:clamp(190px,16vw,250px)}body.page-entry .stl-brand{top:16px}body.page-entry .stl-hud{display:none}'+
+'.hatena-module-recent-entries,.hatena-module-links{display:none!important}';document.head.appendChild(st)})();
 /* Stella Night — ヘッダ：屋上から星を見上げる／フッタ：路地に降りて看板を見る（どちらも AI 生成の一枚絵を 32 色のドット絵に直し、光と動きを足したもの） */
 (() => {
 "use strict";
@@ -468,9 +472,12 @@ function ImageLogo(a){
       ?(()=>{const o=[];for(let i=ri(4,8);i--;)o.push([rr(.045,.08),rr(.04,.15)],[rr(.045,.1),rr(.6,1)]);o.push([.08,1]);return o})()
       :[[rr(.6,1.5),OFF],...strike(true)]
   ];
+  // the full power-on plays once per visit, on the top page; elsewhere the sign is already lit
+  const QUICK=!document.body.classList.contains("page-index")||(()=>{try{return sessionStorage.getItem("stl-lit")}catch(e){return null}})();
   function schedule(t){
     now=t;if(!parts)return;
-    if(boot===null){boot=t;T.forEach((tb,k)=>{tb.v=OFF;play(tb,t+[.35,.9,1.45,2.05][k],k===1?warm():strike(k===3));tb.segs.unshift({s:t,d:0,v0:OFF,v1:OFF,c0:k===1,c1:k===1});tb.next=tb.busy+rr(4,MEAN[k])})}
+    if(boot===null&&QUICK){boot=t;T.forEach((tb,k)=>{tb.v=1;tb.c=0;tb.segs=[];tb.busy=t;tb.next=t+rr(4,MEAN[k])})}   // already seen the power-on: start lit
+    if(boot===null){boot=t;try{sessionStorage.setItem("stl-lit","1")}catch(e){}T.forEach((tb,k)=>{tb.v=OFF;play(tb,t+[.35,.9,1.45,2.05][k],k===1?warm():strike(k===3));tb.segs.unshift({s:t,d:0,v0:OFF,v1:OFF,c0:k===1,c1:k===1});tb.next=tb.busy+rr(4,MEAN[k])})}
     for(const tb of T){
       if(t>=tb.busy&&t>=tb.next){play(tb,t,FAULT[tb.k]());tb.next=tb.busy+MEAN[tb.k]*rr(.5,1.6)}
       const pv=tb.v,pc=tb.c;level(tb,t);if(Math.abs(tb.v-pv)>.003||Math.abs(tb.c-pc)>.003)dirty=true;
@@ -478,7 +485,7 @@ function ImageLogo(a){
   }
   function layout(){
     const hero=a.closest(".stl-hero")||document.body;
-    const w=Math.round(Math.max(150,hero.clientWidth*(hero.clientWidth<640?0.36:0.20)));
+    const art=document.body.classList.contains("page-entry"),w=Math.round(Math.max(art?110:150,hero.clientWidth*(hero.clientWidth<640?(art?0.28:0.36):(art?0.13:0.20))));   // smaller on article pages, where the header is a short band
     a.style.width=w+"px";
     const dpr=Math.min(2,devicePixelRatio||1);
     if(W0){c.width=Math.round(w*dpr);c.height=Math.round(w*dpr*H0/W0);}
@@ -620,7 +627,7 @@ const catKey = name => CAT[name] || "ai";
 
 /* ---------- CSS（デザインCSS 欄を増やさないよう、ここで入れる） ---------- */
 const css = `
-:root{--line2:#3a3460;--dim:#5d6088;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
+:root{--line2:#3a3460;--dim:#7a7eaa;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
 .c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
 body.stl-art{--c:var(--cyan)}
 .stl-art article.entry{max-width:76rem;margin-inline:auto}
@@ -703,6 +710,19 @@ body.stl-art{--c:var(--cyan)}
 .stl-next a:hover .go i{width:52px}
 .stl-next .stl-photo{aspect-ratio:16/9}
 .stl-art .pager-permalink{display:none}
+.stl-artbody>.stl-next{grid-column:2;max-width:none;margin:72px 0 0}
+.stl-artbody.no-route>.stl-next{grid-column:1}
+.stl-artbody>.stl-next a{padding-top:32px}
+/* end of the article: author, stars and share in one quiet row; Hatena's ad framed like the in-article one; comments last */
+.stl-art .entry-footer{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;margin-top:48px}
+.stl-art .entry-footer>*{margin:0!important}
+.stl-art .entry-footer .entry-footer-section{order:1;font-size:12.5px;color:var(--muted)}
+.stl-art .entry-footer .hatena-star-container{order:2}
+.stl-art .entry-footer .social-buttons{order:3;display:flex;gap:6px;align-items:center;transform:scale(.9);transform-origin:left center}
+.stl-art .entry-footer .google-afc-image,.stl-art .entry-footer .customized-footer{order:4;flex-basis:100%}
+.stl-art .entry-footer .google-afc-image{display:flex;flex-direction:column;align-items:center;padding:18px 0 22px;border-block:1px solid var(--line)}
+.stl-art .entry-footer .google-afc-image::before{content:"AD";font-family:var(--f-pixel);font-size:10.5px;letter-spacing:.24em;color:var(--dim);margin-bottom:12px}
+.stl-art .entry-footer .comment-box{order:5;flex-basis:100%}
 @media (max-width:1100px){.stl-artbody{grid-template-columns:12rem minmax(0,40rem)}}
 @media (max-width:900px){
   .stl-art .entry-header{grid-template-columns:1fr;padding-block:28px 32px}
@@ -711,6 +731,7 @@ body.stl-art{--c:var(--cyan)}
   .stl-artbody>.entry-content,.stl-artbody>.entry-footer{grid-column:1}
   .stl-route{display:none}.stl-nowbar{display:block}
   .stl-next a{grid-template-columns:1fr}.stl-next .stl-photo{order:-1}
+  .stl-artbody>.stl-next{grid-column:1}
 }
 @media (prefers-reduced-motion:reduce){.stl-route .fill,.stl-route li a,.stl-next .go i{transition:none}}
 `;
@@ -798,7 +819,7 @@ const footer = $(".entry-footer", entry);
 const useRoute = hs.length >= 2;
 let route, rol, fill, nowbar, nowlist, nowN, nowT, nowBar, items = [], mitems = [];
 if (useRoute) {
-  route = el("nav", "stl-route", `<div class="lab"><span>Route</span><span>${String(chapters || hs.length).padStart(2, "0")} stops</span></div><div class="rail"><ol></ol><span class="fill"></span></div>`);
+  route = el("nav", "stl-route", `<div class="lab"><span>Route</span><span>${String(hs.length).padStart(2, "0")} stops</span></div><div class="rail"><ol></ol><span class="fill"></span></div>`);
   route.setAttribute("aria-label", "目次");
   rol = $("ol", route); fill = $(".fill", route);
   nowbar = el("div", "stl-nowbar", `<button type="button" aria-expanded="false"><span class="n">00</span><span class="t"></span><span aria-hidden="true">▾</span></button><ol hidden></ol><span class="bar"></span>`);
@@ -825,10 +846,12 @@ if (useRoute) {
 body.append(content);
 if (footer) body.append(footer);
 
+let lockI = -1, lockT = 0;
 function updRoute() {
   if (!useRoute) return;
-  const y = innerHeight * .3; let cur = 0;
+  const y = Math.min(innerHeight * .3, 160); let cur = 0;
   hs.forEach((h, i) => { if (h.getBoundingClientRect().top < y) cur = i; });
+  if (lockI >= 0) { if (Date.now() < lockT) cur = lockI; else lockI = -1; }
   items.forEach((li, i) => { li.classList.toggle("now", i === cur); li.classList.toggle("done", i < cur); });
   mitems.forEach((li, i) => li.classList.toggle("now", i === cur));
   const a = items[cur].getBoundingClientRect(), o = rol.getBoundingClientRect(), r = content.getBoundingClientRect(), sec = hs[cur].getBoundingClientRect();
@@ -843,6 +866,11 @@ function updRoute() {
 if (useRoute) {
   let raf = 0; const req = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; updRoute(); }); };
   addEventListener("scroll", req, { passive: true }); addEventListener("resize", req); updRoute();
+  // after a click on a station, keep that station lit while the page jumps (short sections would otherwise light the next one)
+  const lockTo = e => { const a = e.target.closest("a[href^='#']"); if (!a) return; const i = hs.findIndex(h => "#" + h.id === a.getAttribute("href")); if (i < 0) return; lockI = i; lockT = Date.now() + 6e4; lockAt = Date.now(); req(); };
+  let lockAt = 0; const unlock = () => { if (lockI >= 0 && Date.now() - lockAt > 400) { lockI = -1; req(); } };   // the reader scrolls on their own again
+  rol.addEventListener("click", lockTo); nowlist.addEventListener("click", lockTo);
+  for (const ev of ["wheel", "touchmove", "keydown"]) addEventListener(ev, unlock, { passive: true });
   // keep the "now" station visible inside a long route
   addEventListener("scroll", () => { const n = $("li.now", rol); if (n && route.scrollHeight > route.clientHeight) { const rr = route.getBoundingClientRect(), nr = n.getBoundingClientRect(); if (nr.top < rr.top + 40 || nr.bottom > rr.bottom - 40) route.scrollTop += nr.top - rr.top - rr.height / 2; } }, { passive: true });
 }
@@ -868,7 +896,7 @@ if (pn) {
   const sec = el("section", "stl-next no-photo");
   sec.setAttribute("aria-label", "次の記事");
   sec.innerHTML = `<a href="${esc(url)}"><span><span class="lab">Next stop</span><span class="stl-tag" hidden></span><h2>${esc(t)}</h2><span class="go">読む<i></i></span></span></a>`;
-  entry.after(sec);
+  content.after(sec);   // straight after the text, before stars / share / comments
   fetch("/feed").then(r => r.ok ? r.text() : "").then(xml => {
     if (!xml) return;
     const d = new DOMParser().parseFromString(xml, "application/xml");
@@ -878,7 +906,7 @@ if (pn) {
     const title = e.getElementsByTagName("title")[0];
     if (title) $("h2", sec).textContent = title.textContent;
     if (cat) { const tg = $(".stl-tag", sec); tg.textContent = cat.getAttribute("term"); tg.hidden = false; sec.classList.add("c-" + catKey(cat.getAttribute("term"))); }
-    if (enc) {
+    if (enc && /\/fotolife\/|f\.st-hatena\.com/.test(enc.getAttribute("href"))) {   // only the author's photo, never Hatena's default OGP image
       const ph = el("span", "stl-photo"); const im = new Image(); im.alt = ""; im.decoding = "async"; im.src = enc.getAttribute("href");
       ph.appendChild(im); $("a", sec).appendChild(ph); sec.classList.remove("no-photo");
       pixelate(ph, im);
@@ -906,7 +934,7 @@ const keyOf = name => KEYS.find(k => CAT[k][0] === name) || "ai";
 const jst = d => d.toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
 
 const css = `
-:root{--line2:#3a3460;--dim:#5d6088;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
+:root{--line2:#3a3460;--dim:#7a7eaa;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
 .c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
 body.stl-top #main-inner>article.entry,body.stl-top #main-inner>.pager{display:none}
 .stl-tp{max-width:76rem;margin:0 auto}
@@ -924,6 +952,8 @@ body.stl-top #main-inner>article.entry,body.stl-top #main-inner>.pager{display:n
 .stl-tp .cats button::before{content:"";width:6px;height:6px;background:var(--c);opacity:.55}
 .stl-tp .cats button:hover,.stl-tp .cats button[aria-pressed="true"]{color:var(--white)}
 .stl-tp .cats button[aria-pressed="true"]::before{opacity:1;box-shadow:0 0 10px var(--c)}
+.stl-tp .cats button[aria-pressed="true"]{box-shadow:inset 0 -2px 0 var(--c)}
+.stl-tp .cats .c-all{--c:var(--white)}
 .stl-tp .cats button span{font-family:var(--f-mono);font-size:11px;color:var(--dim)}
 /* sky map */
 .stl-sky{position:relative;margin-top:8px;height:clamp(300px,34vw,400px)}
@@ -1034,7 +1064,7 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
 
   /* sky */
   const skySec = el("section", "", `<div class="head"><h2 id="stl-h-sky"><small>Sky map</small>書いてきたもの</h2><p>記事は星、横は時間、段はカテゴリ。同じカテゴリの記事を線で結ぶと星座になります。星を押すと記事が開きます。</p></div>
-<div class="cats" role="group" aria-label="カテゴリで絞り込む">${KEYS.map(k => `<button type="button" class="c-${k}" data-k="${k}" aria-pressed="false">${CAT[k][0]}<span>${counts[k] || 0}</span></button>`).join("")}</div>
+<div class="cats" role="group" aria-label="カテゴリで絞り込む"><button type="button" class="c-all" data-k="" aria-pressed="true">すべて<span>${posts.length}</span></button>${KEYS.map(k => `<button type="button" class="c-${k}" data-k="${k}" aria-pressed="false">${CAT[k][0]}<span>${counts[k] || 0}</span></button>`).join("")}</div>
 <div class="stl-sky"><canvas aria-hidden="true"></canvas><div class="stl-tip" role="status"></div></div><div class="stl-legend mono"></div>
 <ul class="sr" aria-label="すべての記事">${posts.map(p => `<li><a href="${esc(p.url)}">${jst(p.d)} ${esc(p.cat)}：${esc(p.t)}</a></li>`).join("")}</ul>`);
   skySec.setAttribute("aria-labelledby", "stl-h-sky");
@@ -1068,7 +1098,9 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
     const W = r.width, H = r.height, padL = W < 600 ? 16 : 110, padR = 40, top = 26, bot = 40, lane = (H - top - bot) / KEYS.length;
     const used = {};
     posts.slice().reverse().forEach(p => {
-      p.x = padL + (p.d - start) / (end - start) * (W - padL - padR);
+      // x = order of publication, so stars never pile up when posts are close in time (dates are shown by the month ticks)
+      const ord = posts.length - 1 - posts.indexOf(p), N = Math.max(1, posts.length - 1);
+      p.x = padL + (posts.length === 1 ? .5 : ord / N) * (W - padL - padR);
       // spread stars that would sit on top of each other in the same lane
       const key = p.k, list = used[key] || (used[key] = []); let j = 0;
       while (list.some(q => Math.abs(q.x - p.x) < 14 && q.j === j)) j++;
@@ -1084,13 +1116,11 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
     const step = REDUCE ? 0 : Math.floor(t * 10) / 10;
     for (const [a, b, c] of dust) { const tw = .25 + .25 * Math.sin(step * 1.3 + c * 40); sx.fillStyle = `rgba(200,210,255,${tw * .5})`; sx.fillRect(Math.round(a), Math.round(b), 1, 1); }
     sx.font = "11px DotGothic16, monospace"; sx.textBaseline = "middle";
-    KEYS.forEach((k, i) => { const y = top + lane * (i + .5), on = !filter || filter === k; sx.fillStyle = on ? CAT[k][1] : "#3a3460"; sx.globalAlpha = on ? .85 : .6; if (W >= 600) sx.fillText(CAT[k][0], 16, y); sx.globalAlpha = 1;
+    KEYS.forEach((k, i) => { const y = top + lane * (i + .5), on = !filter || filter === k; sx.fillStyle = on ? CAT[k][1] : "#6b6f99"; sx.globalAlpha = on ? .9 : .8; if (W >= 600) sx.fillText(CAT[k][0], 16, y); sx.globalAlpha = 1;
       sx.strokeStyle = "rgba(58,52,96,.35)"; sx.setLineDash([2, 6]); sx.beginPath(); sx.moveTo(padL, y); sx.lineTo(W - padR, y); sx.stroke(); sx.setLineDash([]); });
     // month ticks
-    sx.font = "10.5px 'JetBrains Mono', monospace"; sx.fillStyle = "#5d6088"; sx.textBaseline = "alphabetic";
-    const s0 = new Date(start), months = []; for (let d = new Date(s0.getFullYear(), s0.getMonth() + 1, 1); d.getTime() < end; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) months.push(d);
-    const every = Math.max(1, Math.ceil(months.length / (W < 600 ? 4 : 12)));
-    months.forEach((d, i) => { const x = padL + (d - start) / (end - start) * (W - padL - padR); sx.fillRect(Math.round(x), H - bot + 6, 1, 4); if (i % every === 0) sx.fillText(String(d.getMonth() + 1).padStart(2, "0"), Math.round(x) - 6, H - bot + 24); });
+    sx.font = "10.5px 'JetBrains Mono', monospace"; sx.fillStyle = "#7a7eaa"; sx.textBaseline = "alphabetic";
+    { let pm = ""; posts.slice().reverse().forEach(p => { const m = p.d.getFullYear() + "-" + p.d.getMonth(); if (m === pm) return; pm = m; const x = Math.round(p.x); sx.fillRect(x, H - bot + 6, 1, 4); sx.fillText(String(p.d.getMonth() + 1).padStart(2, "0"), x - 6, H - bot + 24); }); }
     // constellations draw in after first view
     const prog = drawT === null ? 0 : Math.min(1, (t - drawT) / 1.6);
     KEYS.forEach(k => {
@@ -1128,11 +1158,11 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
   });
   sc.addEventListener("pointerleave", () => { hover = -1; tip.classList.remove("on"); if (REDUCE) draw(0); });
   sc.addEventListener("click", e => { const i = pick(e); if (i >= 0) location.href = posts[i].url; });
-  $(".stl-legend", skySec).innerHTML = `<span>${jst(new Date(start))}</span><span>${posts.length} posts・星の大きさ＝読む時間</span><span>${jst(new Date(end - DAY * 2))}</span>`;
+  $(".stl-legend", skySec).innerHTML = `<span>${jst(posts[posts.length - 1].d)}</span><span>${posts.length} posts・左から古い順・星の大きさ＝読む時間</span><span>${jst(f0.d)}</span>`;
   // category filter: light one constellation and dim the rows of other categories
   $$(".cats button", skySec).forEach(b => b.addEventListener("click", () => {
-    const k = b.dataset.k; filter = filter === k ? null : k;
-    $$(".cats button", skySec).forEach(x => x.setAttribute("aria-pressed", String(x.dataset.k === filter)));
+    const k = b.dataset.k || null; filter = !k || filter === k ? null : k;
+    $$(".cats button", skySec).forEach(x => x.setAttribute("aria-pressed", String((x.dataset.k || null) === filter)));
     $$(".stl-row", latest).forEach(r => r.classList.toggle("dim", !!filter && r.dataset.k !== filter));
     if (REDUCE) draw(0);
   }));

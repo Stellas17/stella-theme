@@ -6,6 +6,21 @@ l.href='https://fonts.googleapis.com/css2?family=DotGothic16&family=JetBrains+Mo
 const st=document.createElement('style');st.dataset.stella='global';st.textContent=
 'body.page-entry .stl-hero{height:clamp(190px,16vw,250px)}body.page-entry .stl-brand{top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-end}body.page-entry .stl-hud{display:none}'+
 '.hatena-module-recent-entries,.hatena-module-links{display:none!important}'+
+/* the city fades in over the still picture painted by the design CSS (or over the night gradient if that is not set) */
+'.stl-hero .stl-lens{opacity:0;transition:opacity .5s steps(6,end);image-rendering:auto}.stl-hero.stl-ready .stl-lens{opacity:1}'+
+/* article pages: keep the logo and tagline above the menu */
+'body.page-entry .stl-brand{bottom:48px}@media (max-width:560px){body.page-entry .stl-brand{bottom:40px}}'+
+/* narrow screens: the logo sits over bright towers, so deepen the night behind the tagline */
+'@media (max-width:639px){.stl-shade{background:linear-gradient(to bottom,transparent 70%,var(--bg) 100%),linear-gradient(to top right,rgba(6,5,13,.55),transparent 40%),radial-gradient(75% 30% at 78% 15%,rgba(6,5,13,.7),transparent 72%)}body.page-entry .stl-shade{background:linear-gradient(to bottom,transparent 60%,var(--bg) 100%),radial-gradient(70% 55% at 80% 38%,rgba(6,5,13,.7),transparent 75%)}}'+
+'@media (prefers-reduced-motion:reduce){.stl-hero .stl-lens{transition:none}}'+
+/* Japanese titles break at phrase boundaries instead of mid-word */
+'.entry-title,.stl-row h3,.stl-feature h3,.stl-next h2,.stl-ar h2{word-break:auto-phrase}'+
+/* phones: on the short article band the tagline would be too small to read, so the logo stands alone */
+'@media (max-width:560px){body.page-entry .stl-tag{display:none}}'+
+/* Hatena's white widgets, recoloured for the night: the add-star button and the sidebar "subscribe" button */
+'[data-hatena-star]::part(star-button-container){filter:invert(1) hue-rotate(180deg) brightness(.85)}'+
+'#box2 .hatena-follow-button{background:none!important;border:1px solid var(--line)!important;border-radius:0!important;color:#c9cce8!important;font-family:var(--f-pixel);font-size:12px!important;letter-spacing:.1em;padding:4px 12px!important;box-shadow:none!important;text-shadow:none!important}'+
+'#box2 .hatena-follow-button:hover{color:var(--cyan)!important;border-color:var(--cyan)!important}'+
 '.stl-nav .stl-fx{font:inherit;color:#d0d3ee;background:none;border:0;padding:2px 0;cursor:pointer;text-shadow:0 1px 3px #000}.stl-nav .stl-fx::before{content:"▸";color:var(--cyan);margin-right:6px;opacity:.85}.stl-nav .stl-fx:hover{color:#fff;text-shadow:0 0 12px var(--cyan)}.stl-nav .stl-fx[aria-pressed=false]{color:#9599c0}';document.head.appendChild(st)})();
 /* Stella Night — ヘッダ：屋上から星を見上げる／フッタ：路地に降りて看板を見る（どちらも AI 生成の一枚絵を 32 色のドット絵に直し、光と動きを足したもの） */
 (() => {
@@ -138,7 +153,7 @@ function ImageHero(cv,gv,dv,SRC){
       for(let y=0;y<im.height;y++)for(let xx=0;xx<im.width;xx++){const p=(y*im.width+xx)*4;if(d[p+3]>128)px.push({x:o.x+xx,y:o.y+y,c:`rgb(${d[p]},${d[p+1]},${d[p+2]})`})}return px};
     A={};A.scarfPx=rd(sc,SRC.scarf);A.legPx=rd(lg,SRC.legs);
     const lm=new Map();for(const q of A.legPx)lm.set(q.x+","+q.y,q.c);A.legMap=lm;
-    build();ready=true;resize();frame(performance.now()/1000)});
+    build();ready=true;resize();frame(performance.now()/1000);requestAnimationFrame(()=>cv.parentElement.classList.add("stl-ready"))});
   const at=(x,y)=>{const p=(y*SW+x)*4;return[D[p],D[p+1],D[p+2]]};
   const hexc=c=>`rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;
   const inR=(x,y,r)=>x>=r[0]&&x<r[0]+r[2]&&y>=r[1]&&y<r[1]+r[3];
@@ -613,8 +628,8 @@ bindT("#t-motion","motion",()=>{});bindT("#t-ad","ad",()=>{alleyS&&alleyS.showAd
   addEventListener("resize",()=>setTimeout(place,200));window.__placeEgg=place;
   sync()}
 
-const fontsReady=document.fonts?Promise.race([document.fonts.load('16px "DotGothic16"').then(()=>document.fonts.ready),new Promise(r=>setTimeout(r,2500))]):Promise.resolve();
-fontsReady.then(start,start);
+/* the city starts at once: only the logo's tagline needs the web fonts, and ImageLogo re-fits it on document.fonts.ready */
+start();
 window.__stella={get vis(){return vis}};
 })();
 
@@ -1184,4 +1199,166 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
   if (REDUCE) draw(0);
   else { let last = 0; (function loop(ms) { requestAnimationFrame(loop); if (!vis || ms - last < 83) return; last = ms; draw(ms / 1000); })(0); }
 }).catch(restore);
+})();
+
+/* Stella — 記事一覧（/archive・カテゴリ・月別）：トップの「新しい記事」と同じ行で並べ直す。
+   はてなの一覧（body.page-archive）の DOM から作る。ページ送りと並び替えは、はてなのものをそのまま使う。 */
+(() => {
+"use strict";
+const B = document.body;
+if (!B.classList.contains("page-archive")) return;
+const list = document.querySelector("#main-inner .archive-entries");
+if (!list || list.dataset.stl) return;
+list.dataset.stl = "1";
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const CAT = { ai: ["AI・データ", "#46ecff"], work: ["仕事の仕組み", "#ffb347"], make: ["つくる", "#ff4fa8"], run: ["走る", "#ffd896"], photo: ["撮る", "#b48cff"] };
+const KEYS = Object.keys(CAT);
+const keyOf = name => KEYS.find(k => CAT[k][0] === name) || "ai";
+
+const css = `
+:root{--line2:#3a3460;--dim:#7a7eaa;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
+.c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
+body.stl-arc #main-inner>.archive-header-category,body.stl-arc #main-inner>.archive-entries-sort,body.stl-arc .archive-entries>section{display:none}
+.stl-ar{max-width:76rem;margin:0 auto}
+.stl-ar .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.stl-ar .tag{font-family:var(--f-pixel);font-size:12px;letter-spacing:.1em;color:var(--c);display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.stl-ar .tag::before{content:"";width:6px;height:6px;background:var(--c);box-shadow:0 0 8px var(--c)}
+.stl-ar .head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-block:56px 18px;border-bottom:1px solid var(--line)}
+.stl-ar .head h1{margin:0;font-family:var(--f-pixel);font-weight:400;font-size:clamp(22px,3vw,30px);line-height:1.4;letter-spacing:.06em;color:var(--white)}
+.stl-ar .head h1 small{display:block;font-size:11.5px;letter-spacing:.24em;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
+.stl-ar .head p{margin:0;font-family:var(--f-pixel);font-size:12.5px;letter-spacing:.1em;color:var(--dim);white-space:nowrap}
+.stl-ar .head p a{color:var(--muted);text-decoration:none}.stl-ar .head p a:hover{color:var(--cyan)}
+.stl-ar .head p b{font-weight:400;color:var(--white)}
+.stl-ar .cats{display:flex;flex-wrap:wrap;gap:6px 22px;padding-block:14px 0}
+.stl-ar .cats a{font-family:var(--f-pixel);font-size:13px;letter-spacing:.1em;color:#b9bcdc;text-decoration:none;padding:2px 0;display:inline-flex;align-items:center;gap:8px}
+.stl-ar .cats a::before{content:"";width:6px;height:6px;background:var(--c);opacity:.55}
+.stl-ar .cats a:hover,.stl-ar .cats a[aria-current]{color:var(--white)}
+.stl-ar .cats a[aria-current]{box-shadow:inset 0 -2px 0 var(--c)}
+.stl-ar .cats a[aria-current]::before{opacity:1;box-shadow:0 0 10px var(--c)}
+.stl-ar .cats .c-all{--c:var(--white)}
+.stl-ar .stl-rows{list-style:none;margin:28px 0 0;padding:0}
+.stl-ar .stl-row{border-top:1px solid var(--line);margin:0}
+.stl-ar .stl-row:last-child{border-bottom:1px solid var(--line)}
+.stl-ar .stl-row a{display:grid;grid-template-columns:6.5rem minmax(0,1fr) 200px;gap:clamp(14px,3vw,36px);align-items:center;padding-block:26px;text-decoration:none;color:inherit;position:relative}
+.stl-ar .stl-row .no{font-size:12px;color:var(--dim);align-self:start;padding-top:4px}
+.stl-ar .stl-row h2{margin:.4em 0 .35em;font-size:clamp(17px,2vw,20px);line-height:1.6;font-weight:700;text-wrap:balance;color:var(--text);transition:color .2s var(--step);border:0;padding:0}
+.stl-ar .stl-row p{margin:0;font-size:14px;line-height:1.8;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.stl-ar .stl-row a::before{content:"";position:absolute;left:-16px;top:26px;bottom:26px;width:2px;background:var(--c);transform:scaleY(0);transform-origin:top;transition:transform .25s var(--step);box-shadow:0 0 12px var(--c)}
+.stl-ar .stl-row a:hover::before,.stl-ar .stl-row a:focus-visible::before{transform:none}
+.stl-ar .stl-row a:hover h2{color:var(--white)}
+.stl-ar .meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.stl-ar .stl-pix{position:relative;display:block;aspect-ratio:3/2;max-width:100%;overflow:hidden;background:var(--surface)}
+.stl-ar .stl-pix canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.stl-ar .stl-pix::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);pointer-events:none}
+.stl-ar .stl-vf{position:absolute;inset:10px;pointer-events:none;z-index:1;opacity:0;transition:opacity .2s var(--step)}
+.stl-ar .stl-vf::before,.stl-ar .stl-vf::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--c)}
+.stl-ar .stl-vf::before{left:0;top:0;border-right:0;border-bottom:0}.stl-ar .stl-vf::after{right:0;bottom:0;border-left:0;border-top:0}
+.stl-ar a:hover .stl-vf,.stl-ar a:focus-visible .stl-vf{opacity:1}
+.stl-ar .stl-reveal{clip-path:inset(0 0 100% 0);transition:clip-path .5s var(--step)}
+.stl-ar .stl-reveal.in{clip-path:inset(0 0 0 0)}
+.stl-ar .empty{padding-block:40px;color:var(--muted)}
+body.stl-arc .pager{max-width:76rem;justify-content:center;gap:40px}
+body.stl-arc .pager a{border:1px solid var(--line2);padding:12px 26px;letter-spacing:.16em}
+body.stl-arc .pager a:hover{border-color:var(--cyan);color:var(--cyan)}
+@media (max-width:820px){.stl-ar .stl-row a{grid-template-columns:minmax(0,1fr) 112px}.stl-ar .stl-row .no,.stl-ar .stl-row p{display:none}.stl-ar .stl-row a::before{left:-10px}.stl-ar .head{flex-direction:column;gap:10px}}
+@media (prefers-reduced-motion:reduce){.stl-ar .stl-reveal{clip-path:none}.stl-ar .stl-vf,.stl-ar .stl-row a::before{transition:none}}
+`;
+
+/* ---------- read Hatena's list ---------- */
+const posts = $$("section.archive-entry", list).map(s => {
+  const a = $(".entry-title a", s), t = $("time[datetime]", s), c = $(".categories a", s), th = $(".entry-thumb", s), ds = $(".entry-description", s);
+  if (!a) return null;
+  const m = th && (th.getAttribute("style") || "").match(/url\(['"]?([^'")]+)/);
+  const cat = c ? c.textContent.trim() : "";
+  return { url: a.href, t: a.textContent.trim(), d: t ? t.getAttribute("datetime") : "", cat, k: keyOf(cat), thumb: m ? m[1] : "", desc: ds ? ds.textContent.trim().replace(/\s+/g, " ") : "" };
+}).filter(Boolean);
+
+/* ---------- heading: which list is this ---------- */
+const P = decodeURIComponent(location.pathname);
+const mc = P.match(/^\/archive\/category\/(.+?)\/?$/), md = P.match(/^\/archive\/(\d{4})(?:\/(\d{1,2}))?(?:\/(\d{1,2}))?/);
+const head = $(".archive-heading");
+let small = "Archive", title = "記事一覧", cur = "";
+if (mc) { small = "Category"; title = head ? head.textContent.trim() : mc[1]; cur = title; }
+else if (md) { small = "Archive"; title = md[1] + "年" + (md[2] ? +md[2] + "月" : "") + (md[3] ? +md[3] + "日" : "") + "の記事"; }
+const sortCur = $(".archive-entries-sort-current"), sortLink = $(".archive-entries-sort-link");
+const sort = sortCur && sortLink ? `<p>${location.search.includes("orderBy=popular") ? `<a href="${esc(location.pathname)}">新着順</a>　<b>人気順</b>` : `<b>新着順</b>　<a href="${esc(sortLink.getAttribute("href"))}">人気順</a>`}</p>` : `<p class="mono">${posts.length} posts</p>`;
+
+const wrap = el("section", "stl-ar");
+wrap.setAttribute("aria-labelledby", "stl-h-ar");
+wrap.innerHTML = `<div class="head"><h1 id="stl-h-ar"><small>${esc(small)}</small>${esc(title)}</h1>${sort}</div>
+<nav class="cats" aria-label="カテゴリ"><a class="c-all" href="/archive"${!mc && !md ? ' aria-current="page"' : ""}>すべて</a>${KEYS.map(k => `<a class="c-${k}" href="/archive/category/${encodeURIComponent(CAT[k][0])}"${cur === CAT[k][0] ? ' aria-current="page"' : ""}>${CAT[k][0]}</a>`).join("")}</nav>
+${posts.length ? `<ol class="stl-rows">${posts.map(p => `<li class="stl-row stl-reveal c-${p.k}"><a href="${esc(p.url)}"><span class="no mono"><time datetime="${esc(p.d)}">${esc(p.d)}</time></span><span style="min-width:0"><span class="meta"><span class="tag">${esc(p.cat || CAT[p.k][0])}</span></span><h2>${esc(p.t)}</h2><p>${esc(p.desc)}</p></span><span class="stl-pix"><span class="stl-vf"></span></span></a></li>`).join("")}</ol>` : `<p class="empty">まだ記事がありません。</p>`}`;
+// on phones the date column is hidden, so the date joins the category line
+$$(".stl-row", wrap).forEach((li, i) => { const m = $(".meta", li); m.insertAdjacentHTML("beforeend", `<time class="sm" datetime="${esc(posts[i].d)}">${esc(posts[i].d)}</time>`); });
+document.head.appendChild(el("style", null, css + ".stl-ar .meta .sm{display:none}@media (max-width:820px){.stl-ar .meta .sm{display:inline}}")).dataset.stella = "archive";
+list.before(wrap);
+B.classList.add("stl-arc");
+
+/* ---------- pixel photo (same as the top page: dots at rest, focus when looked at) ---------- */
+function PixPhoto(box, src, owner) {
+  const c = el("canvas"); box.prepend(c); const x = c.getContext("2d"), t = document.createElement("canvas"), tx = t.getContext("2d");
+  const REST = 14; let img = null, size = REST, target = REST, timer = null;
+  function fit() { const r = box.getBoundingClientRect(); c.width = Math.max(1, Math.round(r.width)); c.height = Math.max(1, Math.round(r.height)); draw(); }
+  function draw() {
+    if (!img) return; const w = c.width, h = c.height;
+    const s = Math.max(w / img.naturalWidth, h / img.naturalHeight), sw = w / s, sh = h / s, sx = (img.naturalWidth - sw) / 2, sy = (img.naturalHeight - sh) / 2;
+    if (size <= 1) { x.imageSmoothingEnabled = true; x.filter = "none"; x.drawImage(img, sx, sy, sw, sh, 0, 0, w, h); return; }
+    const tw = Math.max(2, Math.round(w / size)), th = Math.max(2, Math.round(h / size)); t.width = tw; t.height = th; tx.imageSmoothingEnabled = true; tx.drawImage(img, sx, sy, sw, sh, 0, 0, tw, th);
+    const k = Math.min(1, (size - 1) / (REST - 1)); x.imageSmoothingEnabled = false; x.filter = `brightness(${1 - .38 * k}) saturate(${1 - .2 * k})`; x.drawImage(t, 0, 0, w, h); x.filter = "none";
+  }
+  function go(to) {
+    target = to; if (REDUCE) { size = to; draw(); return; } if (timer) return;
+    timer = setInterval(() => { size += target > size ? Math.max(1, Math.round((target - size) / 2)) : -Math.max(1, Math.round((size - target) / 2)); if (Math.abs(size - target) < 1) { size = target; clearInterval(timer); timer = null; } draw(); }, 83);
+  }
+  if (!src) return;
+  const im = new Image(); im.decoding = "async"; im.onload = () => { img = im; fit(); if (REDUCE) go(1); }; im.src = src;
+  new ResizeObserver(fit).observe(box);
+  if (!REDUCE && matchMedia("(hover: none)").matches) new IntersectionObserver(es => es.forEach(e => go(e.isIntersecting ? 1 : REST)), { rootMargin: "-30% 0px -30% 0px" }).observe(box);
+  if (!REDUCE) { owner.addEventListener("mouseenter", () => go(1)); owner.addEventListener("mouseleave", () => go(REST)); owner.addEventListener("focus", () => go(1)); owner.addEventListener("blur", () => go(REST)); }
+}
+$$(".stl-row", wrap).forEach((li, i) => { const a = $("a", li); PixPhoto($(".stl-pix", a), posts[i].thumb, a); });
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
+$$(".stl-reveal", wrap).forEach(r => REDUCE ? r.classList.add("in") : io.observe(r));
+})();
+
+/* Stella — 記事の終わりの共有：はてな標準の白いボタン（ブックマーク・Facebook・X）を、夜の配色の文字ボタンに置き換える。
+   はてなスターと「読者になる」はそのまま。 */
+(() => {
+"use strict";
+if (!document.body.classList.contains("page-entry")) return;
+const sb = document.querySelector(".entry-footer .social-buttons");
+if (!sb || sb.dataset.stl) return;
+sb.dataset.stl = "1";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const canon = document.querySelector('link[rel="canonical"]');
+const url = (canon && canon.href) || location.href.split("#")[0];
+const tl = document.querySelector(".entry-title");
+const title = tl ? tl.textContent.trim() : document.title;
+const xa = sb.querySelector("a.entry-share-button-twitter");
+const xHref = xa ? xa.href : "https://x.com/intent/tweet?text=" + encodeURIComponent(title) + "&url=" + encodeURIComponent(url);
+const bHref = "https://b.hatena.ne.jp/entry/" + url.replace(/^https:\/\//, "s/").replace(/^http:\/\//, "");
+const box = document.createElement("div");
+box.className = "stl-share";
+box.setAttribute("role", "group");
+box.setAttribute("aria-label", "この記事を共有");
+box.innerHTML = `<span class="lab">Share</span><a href="${esc(xHref)}" target="_blank" rel="noopener">X でポスト</a><a href="${esc(bHref)}" target="_blank" rel="noopener">B! ブックマーク</a><button type="button">リンクをコピー</button>`;
+const cp = box.querySelector("button");
+cp.addEventListener("click", () => {
+  const done = ok => { cp.textContent = ok ? "コピーしました" : "コピーできませんでした"; cp.classList.toggle("ok", ok); setTimeout(() => { cp.textContent = "リンクをコピー"; cp.classList.remove("ok"); }, 1800); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(() => done(true), () => done(false));
+  else done(false);
+});
+sb.before(box);
+const st = document.createElement("style");
+st.dataset.stella = "share";
+st.textContent = `.entry-footer .social-buttons{display:none!important}
+.stl-share{order:3;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.stl-share .lab{font-family:var(--f-pixel);font-size:11px;letter-spacing:.24em;color:var(--muted);text-transform:uppercase;margin-right:4px}
+.stl-share a,.stl-share button{font:inherit;font-family:var(--f-pixel);font-size:12px;letter-spacing:.1em;line-height:1.4;color:#c9cce8;background:none;border:1px solid var(--line);padding:6px 12px;text-decoration:none;cursor:pointer}
+.stl-share a:hover,.stl-share button:hover,.stl-share a:focus-visible,.stl-share button:focus-visible{color:var(--cyan);border-color:var(--cyan);box-shadow:0 0 14px rgba(70,236,255,.18)}
+.stl-share button.ok{color:var(--cyan);border-color:var(--cyan)}`;
+document.head.appendChild(st);
 })();

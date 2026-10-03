@@ -5,7 +5,8 @@ l.href='https://fonts.googleapis.com/css2?family=DotGothic16&family=JetBrains+Mo
 /* article pages: the city becomes a short band so the title is on the first screen; the sidebar keeps only profile, search and archive */
 const st=document.createElement('style');st.dataset.stella='global';st.textContent=
 'body.page-entry .stl-hero{height:clamp(190px,16vw,250px)}body.page-entry .stl-brand{top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-end}body.page-entry .stl-hud{display:none}'+
-'.hatena-module-recent-entries,.hatena-module-links{display:none!important}';document.head.appendChild(st)})();
+'.hatena-module-recent-entries,.hatena-module-links{display:none!important}'+
+'.stl-nav .stl-fx{font:inherit;color:#d0d3ee;background:none;border:0;padding:2px 0;cursor:pointer;text-shadow:0 1px 3px #000}.stl-nav .stl-fx::before{content:"▸";color:var(--cyan);margin-right:6px;opacity:.85}.stl-nav .stl-fx:hover{color:#fff;text-shadow:0 0 12px var(--cyan)}.stl-nav .stl-fx[aria-pressed=false]{color:#9599c0}';document.head.appendChild(st)})();
 /* Stella Night — ヘッダ：屋上から星を見上げる／フッタ：路地に降りて看板を見る（どちらも AI 生成の一枚絵を 32 色のドット絵に直し、光と動きを足したもの） */
 (() => {
 "use strict";
@@ -99,7 +100,7 @@ void main(){
     if(!maskSet&&mask){up(3,tM,mask);if(fx.depth)up(4,tD,fx.depth);maskSet=true}
     up(0,tB,cv);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,tBl);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,cv);up(2,tG,gv);
     gl.uniform2f(U("tx"),1/g.vw,1/g.vh);gl.uniform2f(U("ms"),g.vw/g.SW,g.vh/g.SH);gl.uniform2f(U("mo"),g.ox/g.SW,(g.SH-g.oy-g.vh)/g.SH);
-    const sf=st.fx;gl.uniform1f(U("ca"),1.35);gl.uniform1f(U("lens"),sf.ca?1:0);gl.uniform1f(U("dof"),sf.dof?1:0);gl.uniform1f(U("asp"),g.vw/g.vh);gl.uniform1f(U("bloom"),sf.bloom?1:0);gl.uniform1f(U("vig"),sf.vig?1:0);gl.uniform1f(U("smooth2"),sf.pixel?0:1);gl.uniform1f(U("fd"),fx.focus||.5);gl.uniform1f(U("aerial"),sf.aerial?1:0);gl.uniform1f(U("airb"),sf.airbloom?1:0);
+    const sf=st.fx;gl.uniform1f(U("ca"),1.35);gl.uniform1f(U("lens"),sf.ca?1:0);gl.uniform1f(U("dof"),sf.dof?(fx.dofk||1):0);gl.uniform1f(U("asp"),g.vw/g.vh);gl.uniform1f(U("bloom"),sf.bloom?1:0);gl.uniform1f(U("vig"),sf.vig?1:0);gl.uniform1f(U("smooth2"),sf.pixel?0:1);gl.uniform1f(U("fd"),fx.focus||.5);gl.uniform1f(U("aerial"),sf.aerial?1:0);gl.uniform1f(U("airb"),sf.airbloom?1:0);
     gl.uniform2f(U("cam"),0,0);
     gl.drawArrays(gl.TRIANGLES,0,3);
     // overlay: flare + bokeh
@@ -126,7 +127,7 @@ void main(){
 
 function ImageHero(cv,gv,dv,SRC){
   const SW=480,SH=206,CHX=140;
-  const ctx=cv.getContext("2d"),gtx=gv.getContext("2d"),dtx=dv.getContext("2d");const SKY=SRC.sky;let dofM=null,MK=null,FX={bokeh:[],star:{x:418,y:19}};
+  const ctx=cv.getContext("2d"),gtx=gv.getContext("2d"),dtx=dv.getContext("2d");const SKY=SRC.sky;let dofM=null,MK=null,FX={bokeh:[],star:{x:418,y:19},dofk:.65};
   const LENS=(()=>{try{return Lens(cv.parentElement)}catch(e){console.warn(e);return null}})();if(LENS)for(const c of [cv,gv,dv])c.style.visibility='hidden';
   const [bc,b]=cnv(SW,SH),[gc,g]=cnv(SW,SH);
   let ready=false,vw=0,vh=0,ox=0,oy=0,scale=3,D,A;
@@ -593,6 +594,12 @@ bindT("#t-motion","motion",()=>{});bindT("#t-ad","ad",()=>{alleyS&&alleyS.showAd
     lab.addEventListener("click",()=>{const on=!g.items.some(([k])=>state.fx[k]);for(const[k]of g.items)state.fx[k]=on;sync();tip.innerHTML=`<b>${g.name}</b><i>${on?"ON":"OFF"}</i><br>この層をまとめて切り替えました`});row.appendChild(lab);
     for(const[k,label,desc]of g.items){const b=mk(k,label,desc,()=>{state.fx[k]=!state.fx[k];sync()});btns[k]=b;row.appendChild(b)}grp.appendChild(row)}
   const setAll=v=>{for(const g of FXDEF)for(const[k]of g.items)state.fx[k]=v;sync()};
+  // one visible switch in the menu: all effects and motion on / off (remembered on this browser)
+  {const nav=$(".stl-nav");if(nav){const fb=document.createElement("button");fb.type="button";fb.className="stl-fx";
+    const apply=on=>{setAll(on);if(on)state.fx.cars=!reduce;state.motion=on&&!reduce;fb.setAttribute("aria-pressed",String(on));fb.textContent=on?"演出 ON":"演出 OFF";once()};
+    let on=true;try{on=localStorage.getItem("stl-fx")!=="off"}catch(e){}
+    fb.addEventListener("click",()=>{on=!on;try{localStorage.setItem("stl-fx",on?"on":"off")}catch(e){}apply(on)});
+    nav.appendChild(fb);fb.setAttribute("aria-pressed","true");fb.textContent="演出 ON";if(!on)apply(false)}}
   for(const[k,label,desc,v]of[["allon","すべてON","すべての効果をオンにする",true],["alloff","すべてOFF","すべての効果をオフにする",false]]){const b=mk(k,label,desc,()=>setAll(v));drawIcon(b._c,ICONS[k],v);foot.appendChild(b)}
   tip.textContent="アイコンにカーソルを合わせると説明が出ます";
   const place=()=>{if(!heroS||!heroS.geo)return;const g=heroS.geo();const X=x=>g.left+(x-g.ox)*g.scale,Y=y=>hero.clientHeight-(g.vh*g.scale)+(y-g.oy)*g.scale;

@@ -648,6 +648,7 @@ body.stl-art{--c:var(--cyan)}
 .stl-art .art-meta{display:flex;gap:16px;align-items:center}
 .stl-art .entry-categories{display:flex;gap:14px;margin:0}
 .stl-art .entry-categories a,.stl-tag{font-family:var(--f-pixel);font-size:12px;letter-spacing:.1em;color:var(--c);display:inline-flex;align-items:center;gap:7px;white-space:nowrap;text-decoration:none;background:none;padding:0;border:0}
+.stl-tag[hidden]{display:none!important}
 .stl-art .entry-categories a::before,.stl-tag::before{content:"";width:6px;height:6px;background:var(--c);box-shadow:0 0 8px var(--c)}
 .stl-art .entry-categories a:hover{color:var(--white)}
 .stl-art h1.entry-title{margin:.45em 0 .2em;font-size:clamp(28px,4.4vw,46px);line-height:1.38;font-weight:700;letter-spacing:.005em;text-wrap:balance}
@@ -1060,6 +1061,8 @@ function PixPhoto(box, src, owner, { auto = false } = {}) {
   if (!src) return;
   const im = new Image(); im.decoding = "async"; im.onload = () => { img = im; fit(); if (auto || REDUCE) setTimeout(() => go(1), 500); }; im.src = src;
   new ResizeObserver(fit).observe(box);
+  // touch screens have no hover: the photo comes into focus while it sits in the middle of the screen
+  if (!auto && !REDUCE && matchMedia("(hover: none)").matches) new IntersectionObserver(es => es.forEach(e => go(e.isIntersecting ? 1 : REST)), { rootMargin: "-30% 0px -30% 0px" }).observe(box);
   if (!auto && !REDUCE) { owner.addEventListener("mouseenter", () => go(1)); owner.addEventListener("mouseleave", () => go(REST)); owner.addEventListener("focus", () => go(1)); owner.addEventListener("blur", () => go(REST)); }
 }
 
@@ -1072,7 +1075,7 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
   const counts = {}; posts.forEach(p => counts[p.k] = (counts[p.k] || 0) + 1);
 
   /* sky */
-  const skySec = el("section", "", `<div class="head"><h2 id="stl-h-sky"><small>Sky map</small>書いてきたもの</h2><p>記事は星、横は時間、段はカテゴリ。同じカテゴリの記事を線で結ぶと星座になります。星を押すと記事が開きます。</p></div>
+  const skySec = el("section", "", `<div class="head"><h2 id="stl-h-sky"><small>Sky map</small>書いてきたもの</h2><p>記事は星、左から古い順、段はカテゴリ。同じカテゴリの記事を線で結ぶと星座になります。星を押すと記事が開きます。</p></div>
 <div class="cats" role="group" aria-label="カテゴリで絞り込む"><button type="button" class="c-all" data-k="" aria-pressed="true">すべて<span>${posts.length}</span></button>${KEYS.map(k => `<button type="button" class="c-${k}" data-k="${k}" aria-pressed="false">${CAT[k][0]}<span>${counts[k] || 0}</span></button>`).join("")}</div>
 <div class="stl-sky"><canvas aria-hidden="true"></canvas><div class="stl-tip" role="status"></div></div><div class="stl-legend mono"></div>
 <ul class="sr" aria-label="すべての記事">${posts.map(p => `<li><a href="${esc(p.url)}">${jst(p.d)} ${esc(p.cat)}：${esc(p.t)}</a></li>`).join("")}</ul>`);

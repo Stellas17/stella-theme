@@ -476,7 +476,7 @@ function ImageLogo(a){
   const QUICK=true;   // no power-on: the sign is shown lit at once (the design CSS already paints the same image before this script loads)
   function schedule(t){
     now=t;if(!parts)return;
-    if(boot===null&&QUICK){boot=t;T.forEach((tb,k)=>{tb.v=1;tb.c=0;tb.segs=[];tb.busy=t;tb.next=t+rr(4,MEAN[k])})}   // already seen the power-on: start lit
+    if(boot===null&&QUICK){boot=t;dirty=true;T.forEach((tb,k)=>{tb.v=1;tb.c=0;tb.segs=[];tb.busy=t;tb.next=t+rr(4,MEAN[k])})}   // already seen the power-on: start lit
     if(boot===null){boot=t;try{sessionStorage.setItem("stl-lit","1")}catch(e){}T.forEach((tb,k)=>{tb.v=OFF;play(tb,t+[.35,.9,1.45,2.05][k],k===1?warm():strike(k===3));tb.segs.unshift({s:t,d:0,v0:OFF,v1:OFF,c0:k===1,c1:k===1});tb.next=tb.busy+rr(4,MEAN[k])})}
     for(const tb of T){
       if(t>=tb.busy&&t>=tb.next){play(tb,t,FAULT[tb.k]());tb.next=tb.busy+MEAN[tb.k]*rr(.5,1.6)}
@@ -532,7 +532,7 @@ function ImageLogo(a){
   }
   function draw(){
     if(!parts||!dirty)return;dirty=false;
-    if(!a.classList.contains("stl-lit")&&T.every(tb=>tb.v>.98))a.classList.add("stl-lit");   // the canvas takes over from the static image
+    if(!a.classList.contains("stl-lit")&&(boot!==null||T.every(tb=>tb.v>.98)))a.classList.add("stl-lit");   // from the first lit frame on, only the canvas shows (never both at once)   // the canvas takes over from the static image
     x.clearRect(0,0,c.width,c.height);x.globalCompositeOperation="lighter";
     for(const tb of T){
       const v=Math.max(OFF,Math.min(1.1,tb.v)),u=Math.min(1,v);

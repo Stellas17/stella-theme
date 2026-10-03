@@ -511,7 +511,7 @@ function ImageLogo(a){
   }
   function layout(){
     const hero=a.closest(".stl-hero")||document.body;
-    const art=document.body.classList.contains("page-entry"),w=Math.round(Math.max(art?110:150,hero.clientWidth*(hero.clientWidth<640?(art?0.28:0.36):(art?0.13:0.20))));   // smaller on article pages, where the header is a short band
+    const art=document.body.classList.contains("page-entry"),w=Math.round(Math.max(art?110:150,hero.clientWidth*(hero.clientWidth<640?(art?0.28:0.56):(art?0.13:0.20))));   // smaller on article pages, where the header is a short band
     a.style.width=w+"px";
     const dpr=Math.min(2,devicePixelRatio||1);
     if(W0){c.width=Math.round(w*dpr);c.height=Math.round(w*dpr*H0/W0);}

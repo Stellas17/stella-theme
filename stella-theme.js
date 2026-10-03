@@ -635,6 +635,7 @@ body.stl-art{--c:var(--cyan)}
 /* head */
 .stl-art .entry-header{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:clamp(20px,4vw,56px);align-items:end;margin:0;padding-block:40px 40px;border-bottom:1px solid var(--line)}
 .stl-art .entry-header.no-photo{grid-template-columns:minmax(0,52rem)}
+.stl-art .entry-header{align-items:center;padding-block:32px}.stl-art .entry-header .stl-photo{aspect-ratio:16/10}
 .stl-art .entry-date{display:none}
 .stl-art .art-meta{display:flex;gap:16px;align-items:center}
 .stl-art .entry-categories{display:flex;gap:14px;margin:0}

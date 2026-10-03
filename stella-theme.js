@@ -32,7 +32,7 @@ const st=document.createElement('style');st.dataset.stella='global';st.textConte
 '#box2 .hatena-module-title{border:0!important;padding:0!important;margin:0 0 8px!important}#box2 .hatena-module-title a{color:inherit!important;text-decoration:none!important}'+
 '#box2 .hatena-module-profile{order:3;margin-left:auto!important}#box2 .hatena-follow-button-box{margin:0!important}'+
 '#box2 .hatena-module-search-box{flex:1 1 16rem;max-width:26rem}'+
-'#box2 .search-form{display:flex;margin:0}'+
+'#box2 .search-form{display:flex;gap:0!important;margin:0}'+
 '#box2 .search-module-input{flex:1;min-width:0;height:44px;box-sizing:border-box;margin:0;background:rgba(18,16,31,.7)!important;border:1px solid var(--line2)!important;border-right:0!important;border-radius:0!important;color:var(--text)!important;font-family:var(--f-body)!important;font-size:14px!important;padding:0 14px!important;box-shadow:none!important}'+
 '#box2 .search-module-input::placeholder{color:var(--muted)}#box2 .search-module-input:focus{outline:none;border-color:var(--cyan)!important}'+
 '#box2 .search-module-button{height:44px;box-sizing:border-box;margin:0;padding:0 18px!important;background:none!important;border:1px solid var(--line2)!important;border-radius:0!important;color:#c9cce8!important;font-family:var(--f-body)!important;font-size:14px!important;cursor:pointer;box-shadow:none!important}'+
@@ -791,6 +791,7 @@ const css = `
 .stl-art .entry-footer .google-afc-image{display:flex;flex-direction:column;align-items:center;padding:18px 0 22px;border-block:1px solid var(--line)}
 .stl-art .entry-footer .google-afc-image::before{content:"AD";font-family:var(--f-pixel);font-size:10.5px;letter-spacing:.24em;color:var(--dim);margin-bottom:12px}
 .stl-art .entry-footer .comment-box{order:5;flex-basis:100%}
+.stl-art .entry-footer .entry-tags-wrapper:not(:has(a)){display:none!important}
 .stl-art .entry-footer .entry-footer-section a{color:var(--muted);text-decoration:none}.stl-art .entry-footer .entry-footer-section a:hover{color:var(--text)}
 .stl-art .entry-footer .hatena-star-container{display:inline-flex;align-items:center;gap:10px;min-height:32px}
 .stl-art .entry-footer .hatena-star-container::before{content:"Star";font-family:var(--f-pixel);font-size:11px;letter-spacing:.24em;color:var(--muted);text-transform:uppercase}

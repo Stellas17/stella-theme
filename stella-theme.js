@@ -457,18 +457,22 @@ function ImageLogo(a){
     if(W0){c.width=Math.round(w*dpr);c.height=Math.round(w*dpr*H0/W0);}
     fitTag(w);dirty=true;draw();
   }
-  /* the tagline spans exactly the lit tubes: from the left edge of the "S" to the end of the "a" */
-  const TUBE_L=.05,TUBE_R=.96;
+  /* the tagline spans exactly the lit tubes: from the left edge of the "S" to the end of the "a".
+     The pixel font is only crisp at multiples of 16px, so the size stays on that grid and the letter spacing takes up the rest;
+     only when even 16px is wider than the sign (narrow screens) does the size shrink instead. */
+  const TUBE_L=.05,TUBE_R=.96,GRID=16;
   function fitTag(w){
     const tag=a.closest(".stl-brand")&&a.closest(".stl-brand").querySelector(".stl-tag");
     if(!tag||!tag.firstChild)return;
-    tag.style.whiteSpace="nowrap";tag.style.fontSize="100px";tag.style.marginRight="0px";
+    Object.assign(tag.style,{whiteSpace:"nowrap",fontSize:GRID+"px",letterSpacing:"0px",marginRight:"0px"});
     const rg=document.createRange();rg.selectNodeContents(tag);
-    const ls=parseFloat(getComputedStyle(tag).letterSpacing)||0;            // the last letter carries spacing too
-    const raw=rg.getBoundingClientRect().width-ls;if(!(raw>0))return;
-    const fs=100*w*(TUBE_R-TUBE_L)/raw;
-    tag.style.fontSize=fs.toFixed(2)+"px";
-    tag.style.marginRight=(w*(1-TUBE_R)-ls*fs/100).toFixed(2)+"px";
+    const raw=rg.getBoundingClientRect().width;if(!(raw>0))return;                // width at 16px with no spacing
+    const n=[...tag.textContent].length,target=w*(TUBE_R-TUBE_L);
+    let fs,ls;
+    if(raw<=target){fs=GRID*Math.max(1,Math.floor(target/raw));ls=(target-raw*fs/GRID)/Math.max(1,n-1)}
+    else{fs=GRID*target/raw;ls=0}
+    Object.assign(tag.style,{fontSize:fs.toFixed(2)+"px",letterSpacing:ls.toFixed(2)+"px",
+      marginRight:(w*(1-TUBE_R)-ls).toFixed(2)+"px"});                           // the last letter carries spacing too
     const h=w*(H0&&W0?H0/W0:.504);                                          // pull it up past the glow under the tubes
     tag.style.marginTop=(.6*fs-.09*h).toFixed(2)+"px";
   }

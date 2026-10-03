@@ -2,16 +2,16 @@
    Pixel art: AI-generated key visuals re-pixelated to 32 colours. Loads after the markup in the footer HTML. */
 (function(){if(!document.querySelector('link[data-stella-fonts]')){const l=document.createElement('link');l.rel='stylesheet';l.dataset.stellaFonts='1';
 l.href='https://fonts.googleapis.com/css2?family=DotGothic16&family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap';document.head.appendChild(l)}
-/* article pages: the city becomes a short band so the title is on the first screen; the sidebar keeps only profile, search and archive */
+/* article, archive and About pages: the city becomes a short band so the content is on the first screen; the sidebar is one quiet strip (search, months, subscribe) */
 const st=document.createElement('style');st.dataset.stella='global';st.textContent=
-'body.page-entry .stl-hero{height:clamp(190px,16vw,250px)}body.page-entry .stl-brand{top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-end}body.page-entry .stl-hud{display:none}'+
+':is(body.page-entry,body.page-archive,body.page-about) .stl-hero{height:clamp(190px,16vw,250px)}:is(body.page-entry,body.page-archive,body.page-about) .stl-brand{top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-end}:is(body.page-entry,body.page-archive,body.page-about) .stl-hud{display:none}'+
 '.hatena-module-recent-entries,.hatena-module-links{display:none!important}'+
 /* the city fades in over the still picture painted by the design CSS (or over the night gradient if that is not set) */
 '.stl-hero .stl-lens{opacity:0;transition:opacity .5s steps(6,end);image-rendering:auto}.stl-hero.stl-ready .stl-lens{opacity:1}'+
 /* article pages: keep the logo and tagline above the menu */
-'body.page-entry .stl-brand{bottom:48px}@media (max-width:560px){body.page-entry .stl-brand{bottom:40px}}'+
+':is(body.page-entry,body.page-archive,body.page-about) .stl-brand{bottom:48px}@media (max-width:560px){:is(body.page-entry,body.page-archive,body.page-about) .stl-brand{bottom:40px}}'+
 /* narrow screens: the logo sits over bright towers, so deepen the night behind the tagline */
-'@media (max-width:639px){.stl-shade{background:linear-gradient(to bottom,transparent 70%,var(--bg) 100%),linear-gradient(to top right,rgba(6,5,13,.55),transparent 40%),radial-gradient(75% 30% at 78% 15%,rgba(6,5,13,.7),transparent 72%)}body.page-entry .stl-shade{background:linear-gradient(to bottom,transparent 60%,var(--bg) 100%),radial-gradient(70% 55% at 80% 38%,rgba(6,5,13,.7),transparent 75%)}}'+
+'@media (max-width:639px){.stl-shade{background:linear-gradient(to bottom,transparent 70%,var(--bg) 100%),linear-gradient(to top right,rgba(6,5,13,.55),transparent 40%),radial-gradient(75% 30% at 78% 15%,rgba(6,5,13,.7),transparent 72%)}:is(body.page-entry,body.page-archive,body.page-about) .stl-shade{background:linear-gradient(to bottom,transparent 60%,var(--bg) 100%),radial-gradient(70% 55% at 80% 38%,rgba(6,5,13,.7),transparent 75%)}}'+
 '@media (prefers-reduced-motion:reduce){.stl-hero .stl-lens{transition:none}}'+
 /* Japanese titles break at phrase boundaries instead of mid-word */
 '.entry-title,.stl-row h3,.stl-feature h3,.stl-next h2,.stl-ar h2{word-break:auto-phrase}'+
@@ -20,11 +20,27 @@ const st=document.createElement('style');st.dataset.stella='global';st.textConte
 '@keyframes stl-glint{0%,100%{opacity:0;transform:scale(.4)}40%{opacity:1;transform:scale(1.15)}70%{opacity:.6;transform:scale(.8)}}'+
 '@media (prefers-reduced-motion:reduce){.egg-spot::after{animation:none}}'+
 /* phones: on the short article band the tagline would be too small to read, so the logo stands alone */
-'@media (max-width:560px){body.page-entry .stl-tag{display:none}}'+
+'@media (max-width:560px){:is(body.page-entry,body.page-archive,body.page-about) .stl-tag{display:none}}'+
 /* Hatena's white widgets, recoloured for the night: the add-star button and the sidebar "subscribe" button */
 '[data-hatena-star]::part(star-button-container){filter:invert(1) hue-rotate(180deg) brightness(.85)}'+
-'#box2 .hatena-follow-button{background:none!important;border:1px solid var(--line)!important;border-radius:0!important;color:#c9cce8!important;font-family:var(--f-pixel);font-size:12px!important;letter-spacing:.1em;padding:4px 12px!important;box-shadow:none!important;text-shadow:none!important}'+
-'#box2 .hatena-follow-button:hover{color:var(--cyan)!important;border-color:var(--cyan)!important}'+
+'#box2 .hatena-follow-button{background:none!important;border:1px solid var(--line)!important;border-radius:0!important;color:#c9cce8!important;font-family:var(--f-body)!important;font-size:14px!important;letter-spacing:.04em;line-height:1.4!important;padding:11px 18px!important;box-shadow:none!important;text-shadow:none!important;display:inline-flex!important;align-items:center;height:auto!important;width:auto!important}'+
+'#box2 .hatena-follow-button,#box2 .hatena-follow-button *{text-decoration:none!important}#box2 .hatena-follow-button:hover{color:var(--cyan)!important;border-color:var(--cyan)!important}'+
+'#box2{max-width:76rem!important;margin:96px auto 0!important}'+
+'#box2-inner{display:flex!important;flex-wrap:wrap;align-items:flex-end;gap:24px 48px;padding-top:28px;border-top:1px solid var(--line)}'+
+'#box2 .hatena-module{margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;width:auto!important}'+
+'#box2 .hatena-module-profile .hatena-module-title,#box2 .profile-icon-link,#box2 .hatena-module-profile .id,#box2 .profile-description,#box2 .profile-about,#box2 .subscription-count-box{display:none!important}'+
+'#box2 .hatena-module-title{border:0!important;padding:0!important;margin:0 0 8px!important}#box2 .hatena-module-title a{color:inherit!important;text-decoration:none!important}'+
+'#box2 .hatena-module-profile{order:3;margin-left:auto!important}#box2 .hatena-follow-button-box{margin:0!important}'+
+'#box2 .hatena-module-search-box{flex:1 1 16rem;max-width:26rem}'+
+'#box2 .search-form{display:flex;margin:0}'+
+'#box2 .search-module-input{flex:1;min-width:0;height:44px;box-sizing:border-box;margin:0;background:rgba(18,16,31,.7)!important;border:1px solid var(--line2)!important;border-right:0!important;border-radius:0!important;color:var(--text)!important;font-family:var(--f-body)!important;font-size:14px!important;padding:0 14px!important;box-shadow:none!important}'+
+'#box2 .search-module-input::placeholder{color:var(--muted)}#box2 .search-module-input:focus{outline:none;border-color:var(--cyan)!important}'+
+'#box2 .search-module-button{height:44px;box-sizing:border-box;margin:0;padding:0 18px!important;background:none!important;border:1px solid var(--line2)!important;border-radius:0!important;color:#c9cce8!important;font-family:var(--f-body)!important;font-size:14px!important;cursor:pointer;box-shadow:none!important}'+
+'#box2 .search-module-button:hover{color:var(--cyan)!important;border-color:var(--cyan)!important}'+
+'#box2 .hatena-urllist{list-style:none!important;margin:0!important;padding:0!important}#box2 .hatena-urllist li{margin:0;padding:0;border:0;list-style:none}'+
+'#box2 .archive-module-button,#box2 .archive-module-year-title{display:none!important}'+
+'#box2 .archive-module-months{display:flex!important;flex-wrap:wrap;gap:6px 18px;margin:0!important;padding:0!important}'+
+'#box2 .archive-module-month a{display:inline-block;padding:10px 0;font-family:var(--f-mono);font-size:13px;color:#c9cce8;text-decoration:none;font-variant-numeric:tabular-nums}#box2 .archive-module-month a:hover{color:var(--cyan)}'+
 '.stl-nav .stl-fx{font:inherit;color:#d0d3ee;background:none;border:0;padding:2px 0;cursor:pointer;text-shadow:0 1px 3px #000}.stl-nav .stl-fx::before{content:"▸";color:var(--cyan);margin-right:6px;opacity:.85}.stl-nav .stl-fx:hover{color:#fff;text-shadow:0 0 12px var(--cyan)}.stl-nav .stl-fx[aria-pressed=false]{color:#9599c0}';document.head.appendChild(st)})();
 /* Stella Night — ヘッダ：屋上から星を見上げる／フッタ：路地に降りて看板を見る（どちらも AI 生成の一枚絵を 32 色のドット絵に直し、光と動きを足したもの） */
 (() => {
@@ -511,7 +527,7 @@ function ImageLogo(a){
   }
   function layout(){
     const hero=a.closest(".stl-hero")||document.body;
-    const art=document.body.classList.contains("page-entry"),w=Math.round(Math.max(art?110:150,hero.clientWidth*(hero.clientWidth<640?(art?0.28:0.56):(art?0.13:0.20))));   // smaller on article pages, where the header is a short band
+    const art=/\bpage-(entry|archive|about)\b/.test(document.body.className),w=Math.round(Math.max(art?110:150,hero.clientWidth*(hero.clientWidth<640?(art?0.28:0.56):(art?0.13:0.20))));   // smaller on article pages, where the header is a short band
     a.style.width=w+"px";
     const dpr=Math.min(2,devicePixelRatio||1);
     if(W0){c.width=Math.round(w*dpr);c.height=Math.round(w*dpr*H0/W0);}
@@ -603,8 +619,8 @@ function start(){
 let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{heroS&&heroS.resize();logoS&&logoS.layout();alleyS&&alleyS.resize();alleyS&&alleyS.scroll();once()},150)});
 addEventListener("scroll",()=>{if(alleyS&&alleyS.scroll()&&vis.alley){lastAlley=0;if(!state.motion)once()}},{passive:true});
 /* clock */
-const clk=$("#stl-clock"),fmt=new Intl.DateTimeFormat("ja-JP",{timeZone:"Asia/Tokyo",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
-const upd=()=>{clk.textContent=fmt.format(new Date())};upd();setInterval(upd,1000);
+const clk=$("#stl-clock"),fmt=new Intl.DateTimeFormat("ja-JP",{timeZone:"Asia/Tokyo",hour:"2-digit",minute:"2-digit",hour12:false});
+const upd=()=>{clk.textContent=fmt.format(new Date())};upd();setInterval(upd,10000);
 
 /* mock toggles */
 const bindT=(id,key,fn)=>{const b=$(id);if(!b)return;b.setAttribute("aria-pressed",String(state[key]));b.addEventListener("click",()=>{state[key]=!state[key];b.setAttribute("aria-pressed",String(state[key]));fn();once()})};
@@ -662,7 +678,6 @@ const catKey = name => CAT[name] || "ai";
 const css = `
 :root{--line2:#3a3460;--dim:#8b8fbb;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
 .c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
-body.stl-art{--c:var(--cyan)}
 .stl-art article.entry{max-width:76rem;margin-inline:auto}
 .stl-art .entry-inner{display:block}
 /* head */
@@ -680,8 +695,8 @@ body.stl-art{--c:var(--cyan)}
 .stl-art h1.entry-title a{color:var(--white);text-decoration:none}
 .stl-facts{display:grid;grid-template-columns:repeat(3,auto);justify-content:start;gap:4px 28px;margin:22px 0 0}
 .stl-facts div{display:grid;gap:2px}
-.stl-facts dt{font-family:var(--f-pixel);font-size:10.5px;letter-spacing:.2em;color:var(--dim)}
-.stl-facts dd{margin:0;font-family:var(--f-mono);font-size:13px;color:var(--text);font-variant-numeric:tabular-nums}
+.stl-facts dt{font-size:13px;letter-spacing:.06em;color:var(--dim)}
+.stl-facts dd{margin:0;font-family:var(--f-mono);font-size:14px;color:var(--text);font-variant-numeric:tabular-nums}.stl-facts dd.jp{font-family:var(--f-body)}
 .stl-photo{position:relative;display:block;aspect-ratio:4/3;overflow:hidden;background:var(--surface);margin:0}
 .stl-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;margin:0}
 .stl-photo .cap{position:absolute;right:10px;bottom:8px;z-index:2;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.06em;color:rgba(246,242,255,.72);text-shadow:0 1px 2px #000}
@@ -704,9 +719,9 @@ body.stl-art{--c:var(--cyan)}
 .stl-art #ad-in-entry{display:flex;flex-direction:column;align-items:center;padding:18px 0 22px;border-block:1px solid var(--line)}
 .stl-art #ad-in-entry::before{content:"AD";font-family:var(--f-pixel);font-size:10.5px;letter-spacing:.24em;color:var(--dim);margin-bottom:12px}
 /* route map */
-.stl-route{position:sticky;top:28px;align-self:start;font-size:13.5px;line-height:1.5;max-height:calc(100vh - 56px);overflow:auto;scrollbar-width:none}
+.stl-route{position:sticky;top:28px;align-self:start;font-size:14px;line-height:1.5;max-height:calc(100vh - 56px);overflow:auto;scrollbar-width:none}
 .stl-route .lab{display:flex;justify-content:space-between;margin-bottom:16px;font-family:var(--f-pixel);font-size:11.5px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase}
-.stl-route .lab span+span{font-family:var(--f-mono);letter-spacing:.06em;color:var(--dim)}
+.stl-route .lab span+span{font-family:var(--f-body);font-size:13px;letter-spacing:.04em;color:var(--dim);text-transform:none}
 .stl-route .rail{position:relative}.stl-route ol{list-style:none;margin:0;padding:0;position:relative}
 .stl-route ol::before,.stl-route .fill{content:"";position:absolute;left:5px;top:8px;width:2px;background:var(--line2)}
 .stl-route ol::before{bottom:8px}
@@ -716,7 +731,7 @@ body.stl-art{--c:var(--cyan)}
 .stl-route li a:hover{color:var(--text)}
 .stl-route li::before{content:"";position:absolute;left:1px;top:13px;width:10px;height:10px;background:var(--bg);box-shadow:inset 0 0 0 2px var(--line2);z-index:1}
 .stl-route li.sub::before{left:3px;top:15px;width:6px;height:6px}
-.stl-route li.sub a{font-size:12.5px;padding:4px 0 4px 12px}
+.stl-route li.sub a{font-size:14px;padding:4px 0 4px 12px}
 .stl-route li.done::before{background:var(--c);box-shadow:none}
 .stl-route li.now::before{background:var(--white);box-shadow:0 0 0 2px var(--c),0 0 14px var(--c)}
 .stl-route li.now>a{color:var(--white)}
@@ -724,7 +739,7 @@ body.stl-art{--c:var(--cyan)}
 .stl-route li.now .n{color:var(--c)}
 /* mobile: now-bar */
 .stl-nowbar{display:none;position:sticky;top:0;z-index:30;margin-inline:-16px;background:rgba(11,10,20,.94);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.stl-nowbar button{width:100%;display:flex;gap:10px;align-items:center;font:inherit;font-size:13px;color:var(--text);background:none;border:0;padding:10px 16px;text-align:left;cursor:pointer}
+.stl-nowbar button{width:100%;display:flex;gap:10px;align-items:center;font:inherit;font-size:14px;color:var(--text);background:none;border:0;padding:10px 16px;text-align:left;cursor:pointer}
 .stl-nowbar .n{font-family:var(--f-mono);font-size:11px;color:var(--c)}
 .stl-nowbar .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stl-nowbar .bar{position:absolute;left:0;bottom:-1px;height:2px;background:var(--c);width:0;box-shadow:0 0 8px var(--c)}
@@ -732,7 +747,7 @@ body.stl-art{--c:var(--cyan)}
 .stl-nowbar ol{list-style:none;margin:0;padding:4px 16px 14px;display:grid;gap:2px;max-height:60vh;overflow:auto}
 .stl-nowbar ol li{margin:0}
 .stl-nowbar ol a{display:block;padding:6px 0;color:var(--muted);text-decoration:none;font-size:14px}
-.stl-nowbar ol li.sub a{padding-left:16px;font-size:13px}
+.stl-nowbar ol li.sub a{padding-left:16px;font-size:14px}
 .stl-nowbar ol li.now a{color:var(--white)}
 /* next stop */
 .stl-next{max-width:76rem;margin:0 auto 80px;padding-inline:0}
@@ -758,6 +773,15 @@ body.stl-art{--c:var(--cyan)}
 .stl-art .entry-footer .google-afc-image{display:flex;flex-direction:column;align-items:center;padding:18px 0 22px;border-block:1px solid var(--line)}
 .stl-art .entry-footer .google-afc-image::before{content:"AD";font-family:var(--f-pixel);font-size:10.5px;letter-spacing:.24em;color:var(--dim);margin-bottom:12px}
 .stl-art .entry-footer .comment-box{order:5;flex-basis:100%}
+.stl-art .entry-footer .entry-footer-section a{color:var(--muted);text-decoration:none}.stl-art .entry-footer .entry-footer-section a:hover{color:var(--text)}
+.stl-art .entry-footer .hatena-star-container{display:inline-flex;align-items:center;gap:10px;min-height:32px}
+.stl-art .entry-footer .hatena-star-container::before{content:"Star";font-family:var(--f-pixel);font-size:11px;letter-spacing:.24em;color:var(--muted);text-transform:uppercase}
+.stl-art .comment-box{padding-top:24px;border-top:1px solid var(--line)}
+.stl-art .comment-box .comment{list-style:none;margin:0 0 16px;padding:0}
+.stl-art .comment-box .comment>li{margin:0;padding:16px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.8}
+.stl-art .comment-box .leave-comment-title{display:inline-flex!important;align-items:center;gap:10px;min-height:44px;box-sizing:border-box;padding:0 18px!important;font-family:var(--f-body)!important;font-size:14px!important;letter-spacing:.04em!important;color:#c9cce8!important;background:none!important;border:1px solid var(--line2)!important;border-radius:0!important;cursor:pointer;text-decoration:none}
+.stl-art .comment-box .leave-comment-title::before{content:"+";font-family:var(--f-pixel);font-size:16px;color:var(--c)}
+.stl-art .comment-box .leave-comment-title:hover{color:var(--white)!important;border-color:var(--c)!important;box-shadow:0 0 14px color-mix(in srgb,var(--c) 22%,transparent)}
 @media (max-width:1100px){.stl-artbody{grid-template-columns:12rem minmax(0,40rem)}}
 @media (max-width:900px){
   .stl-art .entry-header{grid-template-columns:1fr;padding-block:28px 32px}
@@ -789,10 +813,12 @@ left.appendChild($(".entry-title", entry));
 const hs = $$("h3,h4", content).filter(h => h.textContent.trim());
 const chapters = hs.filter(h => h.tagName === "H3").length;
 const chars = content.textContent.replace(/\s/g, "").length;
+// "4章・6見出し": chapters (h3) and all headings (h3 + h4)
+const shape = chapters ? (hs.length > chapters ? `${chapters}章・${hs.length}見出し` : `${chapters}章`) : `${hs.length}見出し`;
 const facts = el("dl", "stl-facts",
   `<div><dt>公開</dt><dd>${timeEl ? jst(timeEl.getAttribute("datetime")) : "—"}</dd></div>` +
   `<div><dt>読む時間</dt><dd>${Math.max(1, Math.round(chars / 500))} 分</dd></div>` +
-  (chapters ? `<div><dt>章</dt><dd>${String(chapters).padStart(2, "0")}</dd></div>` : ""));
+  (chapters || hs.length ? `<div><dt>構成</dt><dd class="jp">${shape}</dd></div>` : ""));
 left.appendChild(facts);
 head.prepend(left);
 
@@ -814,7 +840,9 @@ if (heroImg) {
 /* ---------- pixel → photo ----------
    はてなの画像CDNは CORS を返さないので、画素は読まずに drawImage だけで粗くする */
 function pixelate(box, img, { auto = 0 } = {}) {
-  if (REDUCE) return;
+  // 撮る (photo) posts show the photo as it is: the nearest category class decides (the article, or the Next stop card)
+  const cc = box.closest(".c-ai,.c-work,.c-make,.c-run,.c-photo");
+  if (REDUCE || (cc && cc.classList.contains("c-photo"))) return;
   const c = el("canvas", "stl-pxc"), x = c.getContext("2d"), t = document.createElement("canvas"), tx = t.getContext("2d");
   box.classList.add("stl-pxw"); box.appendChild(c);
   const STEPS = [18, 12, 8, 5, 3, 2];
@@ -854,7 +882,7 @@ const footer = $(".entry-footer", entry);
 const useRoute = hs.length >= 2;
 let route, rol, fill, nowbar, nowlist, nowN, nowT, nowBar, items = [], mitems = [];
 if (useRoute) {
-  route = el("nav", "stl-route", `<div class="lab"><span>Route</span><span>${String(hs.length).padStart(2, "0")} stops</span></div><div class="rail"><ol></ol><span class="fill"></span></div>`);
+  route = el("nav", "stl-route", `<div class="lab"><span>Route</span><span>${shape}</span></div><div class="rail"><ol></ol><span class="fill"></span></div>`);
   route.setAttribute("aria-label", "目次");
   rol = $("ol", route); fill = $(".fill", route);
   nowbar = el("div", "stl-nowbar", `<button type="button" aria-expanded="false"><span class="n">00</span><span class="t"></span><span aria-hidden="true">▾</span></button><ol hidden></ol><span class="bar"></span>`);
@@ -980,23 +1008,37 @@ body.stl-top #main-inner>article.entry,body.stl-top #main-inner>.pager{display:n
 .stl-tp .head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-block:56px 18px;border-bottom:1px solid var(--line)}
 .stl-tp .head h2{margin:0;font-family:var(--f-pixel);font-weight:400;font-size:clamp(22px,3vw,30px);letter-spacing:.06em;color:var(--white);border:0;padding:0}
 .stl-tp .head h2 small{display:block;font-size:11.5px;letter-spacing:.24em;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
-.stl-tp .head p{margin:0;max-width:26rem;font-size:13.5px;line-height:1.8;color:var(--muted);text-align:right}
+.stl-tp .head p{margin:0;max-width:26rem;font-size:14px;line-height:1.8;color:var(--muted);text-align:right}
 /* filter */
 .stl-tp .cats{display:flex;flex-wrap:wrap;gap:6px 22px;padding-block:14px 0}
-.stl-tp .cats button{font:inherit;font-family:var(--f-pixel);font-size:13px;letter-spacing:.1em;color:#b9bcdc;background:none;border:0;padding:2px 0;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.stl-tp .cats button{font:inherit;font-family:var(--f-body);font-size:14px;font-weight:500;letter-spacing:.04em;min-height:36px;color:#b9bcdc;background:none;border:0;padding:2px 0;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
 .stl-tp .cats button::before{content:"";width:6px;height:6px;background:var(--c);opacity:.55}
 .stl-tp .cats button:hover,.stl-tp .cats button[aria-pressed="true"]{color:var(--white)}
 .stl-tp .cats button[aria-pressed="true"]::before{opacity:1;box-shadow:0 0 10px var(--c)}
 .stl-tp .cats button[aria-pressed="true"]{box-shadow:inset 0 -2px 0 var(--c)}
 .stl-tp .cats .c-all{--c:var(--white)}
-.stl-tp .cats button span{font-family:var(--f-mono);font-size:11px;color:var(--dim)}
+.stl-tp .cats button span{font-family:var(--f-mono);font-size:11.5px;font-weight:400;color:var(--dim)}
 /* sky map */
 .stl-sky{position:relative;margin-top:8px;height:clamp(300px,34vw,400px)}
 .stl-sky canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.stl-tip{position:absolute;z-index:3;pointer-events:none;min-width:12rem;max-width:18rem;padding:10px 12px;background:rgba(6,5,13,.94);border:1px solid var(--line2);box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;transform:translateY(4px);transition:opacity .15s var(--step),transform .15s var(--step)}
-.stl-tip.on{opacity:1;transform:none}
-.stl-tip b{display:block;font-size:14px;line-height:1.55;color:var(--white);margin-top:4px;font-weight:700}
-.stl-tip span.mono{font-size:11.5px;color:var(--muted)}
+.stl-pick{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:14px 40px;margin-top:16px;padding:18px 20px 18px 22px;border:1px solid var(--line);border-left:2px solid var(--c);background:linear-gradient(90deg,color-mix(in srgb,var(--c) 8%,rgba(18,16,31,.92)),rgba(11,10,20,.35) 70%)}
+.stl-pick .in{min-width:0}
+.stl-pick .pm{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px}
+.stl-pick .dt{font-size:12px;color:var(--muted)}
+.stl-pick .pt{display:block;margin:.35em 0 0;font-size:clamp(17px,2vw,21px);line-height:1.55;font-weight:700;color:var(--white);text-decoration:none;text-wrap:balance;word-break:auto-phrase}
+.stl-pick .pt:hover{color:var(--c)}
+.stl-pick p{margin:.3em 0 0;font-size:14px;line-height:1.8;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.stl-pick p:empty{display:none}
+.stl-pick .ctl{display:flex;align-items:center;gap:6px}
+.stl-pick .ctl button{width:44px;height:44px;font:inherit;font-family:var(--f-pixel);font-size:18px;line-height:1;color:#c9cce8;background:none;border:1px solid var(--line2);cursor:pointer}
+.stl-pick .ctl button:hover:not(:disabled),.stl-pick .ctl button:focus-visible{color:var(--white);border-color:var(--c)}
+.stl-pick .ctl button:disabled{opacity:.3;cursor:default}
+.stl-pick .ix{min-width:4.6em;text-align:center;font-size:12px;color:var(--dim)}
+.stl-tp .stl-pick .go{margin:0 0 0 10px;height:44px;box-sizing:border-box;padding:0 18px;border:1px solid var(--c);text-decoration:none}
+.stl-pick .go:hover i{width:44px}
+.stl-pick.swap .in{animation:stl-pk .3s steps(4,end)}
+@keyframes stl-pk{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.stl-legend span:nth-child(2){font-family:var(--f-body);font-size:13px}
 .stl-legend{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between;padding-block:12px 0;font-size:12px;color:var(--dim)}
 /* latest */
 .stl-feature{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:clamp(20px,4vw,56px);align-items:center;padding-block:36px 8px;text-decoration:none;color:inherit}
@@ -1031,7 +1073,7 @@ body.stl-top #main-inner>article.entry,body.stl-top #main-inner>.pager{display:n
 .stl-more a{font-family:var(--f-pixel);font-size:13px;letter-spacing:.16em;color:var(--text);text-decoration:none;border:1px solid var(--line2);padding:12px 26px}
 .stl-more a:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 18px rgba(70,236,255,.18)}
 @media (max-width:600px){.stl-legend span:nth-child(2){display:none}}
-@media (max-width:820px){.stl-feature{grid-template-columns:1fr}.stl-row a{grid-template-columns:minmax(0,1fr) 112px}.stl-row .no,.stl-row p,.stl-tp .head p{display:none}.stl-row a::before{left:-10px}}
+@media (max-width:820px){.stl-pick{grid-template-columns:1fr;padding:16px}.stl-pick .go{margin-left:auto!important}.stl-feature{grid-template-columns:1fr}.stl-row a{grid-template-columns:minmax(0,1fr) 112px}.stl-row .no,.stl-row p,.stl-tp .head p{display:none}.stl-row a::before{left:-10px}}
 @media (prefers-reduced-motion:reduce){.stl-reveal{clip-path:none}.stl-tip,.stl-tp .go i,.stl-vf,.stl-row a::before{transition:none}}
 `;
 document.head.appendChild(el("style", null, css)).dataset.stella = "top";
@@ -1070,7 +1112,7 @@ async function loadFeed() {
 /* ---------- pixel photo: dim pixels at rest, resolves when looked at (drawImage only; CDN has no CORS) ---------- */
 function PixPhoto(box, src, owner, { auto = false } = {}) {
   const c = el("canvas"); box.prepend(c); const x = c.getContext("2d"), t = document.createElement("canvas"), tx = t.getContext("2d");
-  const REST = 7; let img = null, size = REST, target = REST, timer = null;
+  const REST = box.closest(".c-photo") ? 1 : 7; let img = null, size = REST, target = REST, timer = null;   // 撮る: the photo as it is
   function fit() { const r = box.getBoundingClientRect(); c.width = Math.max(1, Math.round(r.width)); c.height = Math.max(1, Math.round(r.height)); draw(); }
   function draw() {
     if (!img) return; const w = c.width, h = c.height;
@@ -1100,16 +1142,17 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
   const counts = {}; posts.forEach(p => counts[p.k] = (counts[p.k] || 0) + 1);
 
   /* sky */
-  const skySec = el("section", "", `<div class="head"><h2 id="stl-h-sky"><small>Sky map</small>書いてきたもの</h2><p>記事は星、左から古い順、段はカテゴリ。同じカテゴリの記事を線で結ぶと星座になります。星を押すと記事が開きます。</p></div>
+  const skySec = el("section", "", `<div class="head"><h2 id="stl-h-sky"><small>Sky map</small>書いてきたもの</h2><p>記事は星、左から古い順、段はカテゴリ。星を選ぶと、下にその記事が出ます。</p></div>
 <div class="cats" role="group" aria-label="カテゴリで絞り込む"><button type="button" class="c-all" data-k="" aria-pressed="true">すべて<span>${posts.length}</span></button>${KEYS.map(k => `<button type="button" class="c-${k}" data-k="${k}" aria-pressed="false">${CAT[k][0]}<span>${counts[k] || 0}</span></button>`).join("")}</div>
-<div class="stl-sky"><canvas aria-hidden="true"></canvas><div class="stl-tip" role="status"></div></div><div class="stl-legend mono"></div>
+<div class="stl-sky"><canvas aria-hidden="true"></canvas></div><div class="stl-legend mono"></div>
+<div class="stl-pick"><div class="in" aria-live="polite"><div class="pm"><span class="tag"></span><span class="mono dt"></span></div><a class="pt" href="/"></a><p></p></div><div class="ctl"><button type="button" class="pv" aria-label="ひとつ古い記事">‹</button><span class="ix mono"></span><button type="button" class="nx" aria-label="ひとつ新しい記事">›</button><a class="go" href="/">読む<i></i></a></div></div>
 <ul class="sr" aria-label="すべての記事">${posts.map(p => `<li><a href="${esc(p.url)}">${jst(p.d)} ${esc(p.cat)}：${esc(p.t)}</a></li>`).join("")}</ul>`);
   skySec.setAttribute("aria-labelledby", "stl-h-sky");
   wrap.appendChild(skySec);
 
   /* latest */
   const f0 = posts[0], rest = posts.slice(1, 7);
-  const latest = el("section", "", `<div class="head"><h2 id="stl-h-latest"><small>Latest</small>新しい記事</h2><p>写真はふだんドットのまま。見ようとすると、ピントが合います。</p></div>
+  const latest = el("section", "", `<div class="head"><h2 id="stl-h-latest"><small>Latest</small>新しい記事</h2><p>写真はふだんドットのまま、見ようとするとピントが合います。「撮る」の写真だけは、最初からそのまま。</p></div>
 <a href="${esc(f0.url)}" class="stl-feature c-${f0.k}"><span class="stl-pix"><span class="stl-vf"></span></span><span><span class="meta"><span class="tag">${esc(f0.cat || CAT[f0.k][0])}</span><time datetime="${jst(f0.d)}">${jst(f0.d)}</time><span>${f0.len} 分</span></span><h3>${esc(f0.t)}</h3><p>${esc(f0.desc.slice(0, 110))}${f0.desc.length > 110 ? "…" : ""}</p><span class="go">読む<i></i></span></span></a>
 <ol class="stl-rows" aria-label="これまでの記事">${rest.map((p, i) => `<li class="stl-row stl-reveal c-${p.k}" data-k="${p.k}"><a href="${esc(p.url)}"><span class="no">No.${String(posts.length - 1 - i).padStart(3, "0")}</span><span style="min-width:0"><span class="meta"><span class="tag">${esc(p.cat || CAT[p.k][0])}</span><time datetime="${jst(p.d)}">${jst(p.d)}</time><span>${p.len} 分</span></span><h3>${esc(p.t)}</h3><p>${esc(p.desc)}</p></span><span class="stl-pix"><span class="stl-vf"></span></span></a></li>`).join("")}</ol>
 <div class="stl-more"><a href="/archive">記事一覧へ</a></div>`);
@@ -1123,8 +1166,8 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
   $$(".stl-reveal", latest).forEach(r => REDUCE ? r.classList.add("in") : io.observe(r));
 
   /* ---------- sky map ---------- */
-  const sky = $(".stl-sky", skySec), sc = $("canvas", sky), sx = sc.getContext("2d"), tip = $(".stl-tip", sky);
-  let filter = null, hover = -1, drawT = null, dust = [], G = null;
+  const sky = $(".stl-sky", skySec), sc = $("canvas", sky), sx = sc.getContext("2d"), pk = $(".stl-pick", skySec);
+  let filter = null, hover = -1, sel = 0, drawT = null, dust = [], G = null;
   const DAY = 864e5, now = Date.now();
   const end = Math.max(now, f0.d.getTime()) + DAY * 2;
   const start = Math.min(posts[posts.length - 1].d.getTime() - DAY * 7, end - DAY * 90);
@@ -1152,7 +1195,7 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
     if (!G) return; const { W, H, padL, padR, bot, top, lane } = G; sx.clearRect(0, 0, W, H);
     const step = REDUCE ? 0 : Math.floor(t * 10) / 10;
     for (const [a, b, c] of dust) { const tw = .25 + .25 * Math.sin(step * 1.3 + c * 40); sx.fillStyle = `rgba(200,210,255,${tw * .5})`; sx.fillRect(Math.round(a), Math.round(b), 1, 1); }
-    sx.font = "11px DotGothic16, monospace"; sx.textBaseline = "middle";
+    sx.font = "12px DotGothic16, monospace"; sx.textBaseline = "middle";
     KEYS.forEach((k, i) => { const y = top + lane * (i + .5), on = !filter || filter === k; sx.fillStyle = on ? CAT[k][1] : "#6b6f99"; sx.globalAlpha = on ? .9 : .8; if (W >= 600) sx.fillText(CAT[k][0], 16, y); sx.globalAlpha = 1;
       sx.strokeStyle = "rgba(58,52,96,.35)"; sx.setLineDash([2, 6]); sx.beginPath(); sx.moveTo(padL, y); sx.lineTo(W - padR, y); sx.stroke(); sx.setLineDash([]); });
     // month ticks
@@ -1169,12 +1212,15 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
     });
     // stars: pixel crosses; size = reading time
     posts.forEach((p, i) => {
-      const on = !filter || filter === p.k, hv = i === hover, col = CAT[p.k][1], tw = .75 + .25 * Math.sin(step * 1.7 + i * 1.3);
+      const on = !filter || filter === p.k, hv = i === sel || i === hover, col = CAT[p.k][1], tw = .75 + .25 * Math.sin(step * 1.7 + i * 1.3);
       const r = Math.round(p.r * (hv ? 1.7 : 1)), q = Math.max(2, Math.round(r / 2)), X = Math.round(p.x), Y = Math.round(p.y);
       sx.save(); sx.globalAlpha = on ? tw : .18; if (on) { sx.shadowColor = col; sx.shadowBlur = hv ? 18 : 8; }
       sx.fillStyle = hv ? "#ffffff" : col; sx.fillRect(X - r, Y - Math.floor(q / 2), r * 2, q); sx.fillRect(X - Math.floor(q / 2), Y - r, q, r * 2);
       sx.fillStyle = "#fff"; sx.fillRect(X - 1, Y - 1, 2, 2); sx.restore();
     });
+    // the selected star sits in pixel brackets (the panel below shows it)
+    { const p = posts[sel]; if (p && (!filter || filter === p.k)) { const X = Math.round(p.x), Y = Math.round(p.y), d = Math.round(p.r * 1.7) + 7, L = 6; sx.save(); sx.fillStyle = CAT[p.k][1]; sx.shadowColor = CAT[p.k][1]; sx.shadowBlur = 8;
+      for (const [ax, ay] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const cx = X + ax * d, cy = Y + ay * d; sx.fillRect(ax < 0 ? cx : cx - L, ay < 0 ? cy : cy - 2, L, 2); sx.fillRect(ax < 0 ? cx : cx - 2, ay < 0 ? cy : cy - L, 2, L); } sx.restore(); } }
     // the newest post wears Stella's four-pointed star
     const n = posts[0];
     if (!filter || filter === n.k) {
@@ -1183,26 +1229,45 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
       sx.font = "10.5px 'JetBrains Mono', monospace"; sx.fillStyle = "#f2f8ff"; sx.textAlign = "right"; sx.fillText("NOW", n.x - 14, n.y - 12); sx.textAlign = "left";
     }
   }
-  function pick(e) { const r = sc.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top; let best = -1, bd = 18 * 18; posts.forEach((p, i) => { if (filter && p.k !== filter) return; const d = (p.x - mx) ** 2 + (p.y - my) ** 2; if (d < bd) { bd = d; best = i; } }); return best; }
+  // 44px targets: the nearest visible star within 22px
+  function pick(e) { const r = sc.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top; let best = -1, bd = 22 * 22; posts.forEach((p, i) => { if (filter && p.k !== filter) return; const d = (p.x - mx) ** 2 + (p.y - my) ** 2; if (d < bd) { bd = d; best = i; } }); return best; }
+  // the stars that are lit, oldest first (the panel steps through them left to right)
+  const lit = () => posts.map((p, i) => i).filter(i => !filter || posts[i].k === filter).reverse();
+  const pv = $(".pv", pk), nx = $(".nx", pk);
+  function show(i, anim = true) {
+    sel = i; const p = posts[i], L = lit(), j = L.indexOf(i);
+    pk.className = "stl-pick c-" + p.k;
+    $(".tag", pk).textContent = p.cat || CAT[p.k][0];
+    $(".dt", pk).textContent = `${jst(p.d)}・${p.len} 分`;
+    const t = $(".pt", pk); t.textContent = p.t; t.href = p.url;
+    $("p", pk).textContent = p.desc ? p.desc.slice(0, 90) + (p.desc.length > 90 ? "…" : "") : "";
+    $(".go", pk).href = p.url; $(".go", pk).setAttribute("aria-label", "読む：" + p.t);
+    $(".ix", pk).textContent = `${String(j + 1).padStart(2, "0")} / ${String(L.length).padStart(2, "0")}`;
+    pv.disabled = j <= 0; nx.disabled = j >= L.length - 1;
+    if (anim && !REDUCE) { void pk.offsetWidth; pk.classList.add("swap"); }
+    if (REDUCE) draw(0);
+  }
+  const step = d => { const L = lit(), j = L.indexOf(sel), k = L[Math.max(0, Math.min(L.length - 1, j + d))]; if (k != null && k !== sel) show(k); };
+  pv.addEventListener("click", () => step(-1)); nx.addEventListener("click", () => step(1));
+  // mouse: pointing at a star selects it and a click opens it. touch: the first tap selects, a second tap on the same star opens it
   sc.addEventListener("pointermove", e => {
+    if (e.pointerType === "touch") return;
     const i = pick(e); hover = i; sc.style.cursor = i >= 0 ? "pointer" : "default";
-    if (i >= 0) {
-      const p = posts[i]; tip.innerHTML = `<span class="tag" style="--c:${CAT[p.k][1]}">${esc(p.cat || CAT[p.k][0])}</span> <span class="mono">${jst(p.d)}・${p.len} 分</span><b>${esc(p.t)}</b>`;
-      let L = p.x + 16; const T = p.y - 20; tip.classList.add("on"); const tw = tip.offsetWidth; if (L + tw > G.W - 8) L = p.x - 16 - tw;
-      tip.style.left = Math.max(8, L) + "px"; tip.style.top = Math.max(4, Math.min(G.H - tip.offsetHeight - 4, T)) + "px";
-    } else tip.classList.remove("on");
+    if (i >= 0 && i !== sel) show(i);
     if (REDUCE) draw(0);
   });
-  sc.addEventListener("pointerleave", () => { hover = -1; tip.classList.remove("on"); if (REDUCE) draw(0); });
-  sc.addEventListener("click", e => { const i = pick(e); if (i >= 0) location.href = posts[i].url; });
-  $(".stl-legend", skySec).innerHTML = `<span>${jst(posts[posts.length - 1].d)}</span><span>${posts.length} posts・左から古い順・星の大きさ＝読む時間</span><span>${jst(f0.d)}</span>`;
-  // category filter: light one constellation and dim the rows of other categories
+  sc.addEventListener("pointerleave", () => { hover = -1; if (REDUCE) draw(0); });
+  sc.addEventListener("click", e => { const i = pick(e); if (i < 0) return; if (i === sel) location.href = posts[i].url; else show(i); });
+  $(".stl-legend", skySec).innerHTML = `<span>${jst(posts[posts.length - 1].d)}</span><span>${posts.length} 本・星の大きさは読む時間</span><span>${jst(f0.d)}</span>`;
+  // category filter: light one constellation, dim the rows of other categories, and move the panel to that category's newest post
   $$(".cats button", skySec).forEach(b => b.addEventListener("click", () => {
     const k = b.dataset.k || null; filter = !k || filter === k ? null : k;
     $$(".cats button", skySec).forEach(x => x.setAttribute("aria-pressed", String((x.dataset.k || null) === filter)));
     $$(".stl-row", latest).forEach(r => r.classList.toggle("dim", !!filter && r.dataset.k !== filter));
+    if (filter && posts[sel].k !== filter) show(posts.findIndex(p => p.k === filter)); else show(sel, false);
     if (REDUCE) draw(0);
   }));
+  show(0, false);
   let vis = false;
   new IntersectionObserver(es => { vis = es[0].isIntersecting; if (vis && drawT === null) drawT = performance.now() / 1000; }, { threshold: .2 }).observe(sky);
   layout(); let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { layout(); draw(performance.now() / 1000); }, 150); });
@@ -1239,11 +1304,11 @@ body.stl-arc #main-inner>.archive-header-category,body.stl-arc #main-inner>.arch
 .stl-ar .head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-block:56px 18px;border-bottom:1px solid var(--line)}
 .stl-ar .head h1{margin:0;font-family:var(--f-pixel);font-weight:400;font-size:clamp(22px,3vw,30px);line-height:1.4;letter-spacing:.06em;color:var(--white)}
 .stl-ar .head h1 small{display:block;font-size:11.5px;letter-spacing:.24em;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
-.stl-ar .head p{margin:0;font-family:var(--f-pixel);font-size:12.5px;letter-spacing:.1em;color:var(--dim);white-space:nowrap}
+.stl-ar .head p{margin:0;font-size:14px;letter-spacing:.04em;color:var(--dim);white-space:nowrap}
 .stl-ar .head p a{color:var(--muted);text-decoration:none}.stl-ar .head p a:hover{color:var(--cyan)}
 .stl-ar .head p b{font-weight:400;color:var(--white)}
 .stl-ar .cats{display:flex;flex-wrap:wrap;gap:6px 22px;padding-block:14px 0}
-.stl-ar .cats a{font-family:var(--f-pixel);font-size:13px;letter-spacing:.1em;color:#b9bcdc;text-decoration:none;padding:2px 0;display:inline-flex;align-items:center;gap:8px}
+.stl-ar .cats a{font-size:14px;font-weight:500;letter-spacing:.04em;min-height:36px;color:#b9bcdc;text-decoration:none;padding:2px 0;display:inline-flex;align-items:center;gap:8px}
 .stl-ar .cats a::before{content:"";width:6px;height:6px;background:var(--c);opacity:.55}
 .stl-ar .cats a:hover,.stl-ar .cats a[aria-current]{color:var(--white)}
 .stl-ar .cats a[aria-current]{box-shadow:inset 0 -2px 0 var(--c)}
@@ -1310,7 +1375,7 @@ B.classList.add("stl-arc");
 /* ---------- pixel photo (same as the top page: dots at rest, focus when looked at) ---------- */
 function PixPhoto(box, src, owner) {
   const c = el("canvas"); box.prepend(c); const x = c.getContext("2d"), t = document.createElement("canvas"), tx = t.getContext("2d");
-  const REST = 7; let img = null, size = REST, target = REST, timer = null;
+  const REST = box.closest(".c-photo") ? 1 : 7; let img = null, size = REST, target = REST, timer = null;   // 撮る: the photo as it is
   function fit() { const r = box.getBoundingClientRect(); c.width = Math.max(1, Math.round(r.width)); c.height = Math.max(1, Math.round(r.height)); draw(); }
   function draw() {
     if (!img) return; const w = c.width, h = c.height;
@@ -1367,7 +1432,7 @@ st.dataset.stella = "share";
 st.textContent = `.entry-footer .social-buttons{display:none!important}
 .stl-share{order:3;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .stl-share .lab{font-family:var(--f-pixel);font-size:11px;letter-spacing:.24em;color:var(--muted);text-transform:uppercase;margin-right:4px}
-.stl-share a,.stl-share button{font:inherit;font-family:var(--f-pixel);font-size:12px;letter-spacing:.1em;line-height:1.4;color:#c9cce8;background:none;border:1px solid var(--line);padding:6px 12px;text-decoration:none;cursor:pointer}
+.stl-share a,.stl-share button{font:inherit;font-family:var(--f-body);font-size:14px;letter-spacing:.04em;line-height:1.4;color:#c9cce8;background:none;border:1px solid var(--line2);padding:8px 14px;text-decoration:none;cursor:pointer}
 .stl-share a:hover,.stl-share button:hover,.stl-share a:focus-visible,.stl-share button:focus-visible{color:var(--cyan);border-color:var(--cyan);box-shadow:0 0 14px rgba(70,236,255,.18)}
 .stl-share button.ok{color:var(--cyan);border-color:var(--cyan)}`;
 document.head.appendChild(st);
@@ -1419,7 +1484,7 @@ body.stl-abt #main-inner>article.entry{display:none}
 .stl-ab .st dt{font-family:var(--f-pixel);letter-spacing:.1em;color:var(--muted)}
 .stl-ab .st dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;color:var(--white)}
 .stl-ab .cats{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
-.stl-ab .cats a{font-family:var(--f-pixel);font-size:12.5px;letter-spacing:.1em;color:#b9bcdc;text-decoration:none;display:inline-flex;align-items:center;gap:8px;padding:2px 0}
+.stl-ab .cats a{font-size:14px;font-weight:500;letter-spacing:.04em;color:#b9bcdc;text-decoration:none;display:inline-flex;align-items:center;gap:8px;padding:2px 0}
 .stl-ab .cats a::before{content:"";width:6px;height:6px;background:var(--c);box-shadow:0 0 8px var(--c)}
 .stl-ab .cats a:hover{color:var(--white);box-shadow:inset 0 -2px 0 var(--c)}
 .stl-ab .txt{min-width:0}

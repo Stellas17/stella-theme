@@ -41,6 +41,9 @@ const st=document.createElement('style');st.dataset.stella='global';st.textConte
 '#box2 .archive-module-button,#box2 .archive-module-year-title{display:none!important}'+
 '#box2 .archive-module-months{display:flex!important;flex-wrap:wrap;gap:6px 18px;margin:0!important;padding:0!important}'+
 '#box2 .archive-module-month a{display:inline-block;padding:10px 0;font-family:var(--f-mono);font-size:13px;color:#c9cce8;text-decoration:none;font-variant-numeric:tabular-nums}#box2 .archive-module-month a:hover{color:var(--cyan)}'+
+/* posts without a photo: a quiet star in the category colour instead of an empty frame */
+'.stl-pix.none{background:radial-gradient(55% 65% at 50% 50%,color-mix(in srgb,var(--c) 16%,transparent),transparent 72%),var(--surface)}'+
+'.stl-pix.none::before{content:"";position:absolute;left:50%;top:50%;width:24px;height:24px;margin:-12px 0 0 -12px;background:var(--c);opacity:.8;clip-path:polygon(50% 0,58% 42%,100% 50%,58% 58%,50% 100%,42% 58%,0 50%,42% 42%)}'+
 '.stl-nav .stl-fx{font:inherit;color:#d0d3ee;background:none;border:0;padding:2px 0;cursor:pointer;text-shadow:0 1px 3px #000}.stl-nav .stl-fx::before{content:"▸";color:var(--cyan);margin-right:6px;opacity:.85}.stl-nav .stl-fx:hover{color:#fff;text-shadow:0 0 12px var(--cyan)}.stl-nav .stl-fx[aria-pressed=false]{color:#9599c0}';document.head.appendChild(st)})();
 /* Stella Night — ヘッダ：屋上から星を見上げる／フッタ：路地に降りて看板を見る（どちらも AI 生成の一枚絵を 32 色のドット絵に直し、光と動きを足したもの） */
 (() => {
@@ -613,7 +616,7 @@ function start(){
   try{const ta=$(".stl-title a");if(ta)logoS=ImageLogo(ta)}catch(err){console.warn(err)}
   try{alleyS=AlleyFooter(alley,ALLEY_SRC)}catch(err){console.warn(err)}
   new IntersectionObserver(es=>{for(const e of es)vis.hero=e.isIntersecting;if(!state.motion)once()},{rootMargin:"100px"}).observe(hero);
-  new IntersectionObserver(es=>{for(const e of es)vis.alley=e.isIntersecting;if(!state.motion)once()},{rootMargin:"200px"}).observe(alley);
+  new IntersectionObserver(es=>{for(const e of es)vis.alley=e.isIntersecting;if(!state.motion)once()},{rootMargin:"200px"}).observe(alley||hero);
   once();requestAnimationFrame(loop);
 }
 let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{heroS&&heroS.resize();logoS&&logoS.layout();alleyS&&alleyS.resize();alleyS&&alleyS.scroll();once()},150)});
@@ -715,6 +718,21 @@ const css = `
 .stl-art .entry-content h3+*,.stl-art .entry-content h4+*{margin-top:1em}
 .stl-art .entry-content strong{color:var(--white);background:linear-gradient(transparent 70%,color-mix(in srgb,var(--c) 22%,transparent) 0)}
 .stl-art .entry-content img{max-width:100%;height:auto;display:block}
+/* tall photos stop at most of the screen height, centred */
+.stl-art .entry-content img{max-height:min(82vh,900px);width:auto;margin-inline:auto}.stl-art .entry-content .stl-pxw{margin-inline:auto}
+/* long words, URLs and code never widen the page */
+.stl-art .entry-content p,.stl-art .entry-content li,.stl-art .entry-content dd,.stl-art .entry-content blockquote{overflow-wrap:anywhere}
+.stl-art .entry-content pre{max-width:100%;box-sizing:border-box;overflow-x:auto;padding:16px 18px;background:#07060e;border:1px solid var(--line);font-family:var(--f-mono);font-size:13.5px;line-height:1.7;white-space:pre;scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+/* tables scroll sideways inside their own frame */
+.stl-tbl{max-width:100%;overflow-x:auto;margin:1.6em 0;border-block:1px solid var(--line2);scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+.stl-tbl:focus-visible{outline:1px solid var(--c);outline-offset:2px}
+.stl-art .stl-tbl table{width:100%;margin:0;border-collapse:collapse;border:0;font-size:14px;line-height:1.7;background:none}
+.stl-art .stl-tbl th,.stl-art .stl-tbl td{min-width:7em;padding:9px 14px;text-align:left;vertical-align:top;border:0;border-bottom:1px solid var(--line);background:none}
+.stl-art .stl-tbl th{font-weight:700;color:var(--white);background:rgba(18,16,31,.85);white-space:nowrap}
+.stl-art .stl-tbl th:first-child,.stl-art .stl-tbl td:first-child{min-width:0}
+.stl-art .stl-tbl tr:last-child td{border-bottom:0}
+/* author line: the name only, not the Hatena ID */
+.stl-art .entry-footer .user-name-paren,.stl-art .entry-footer .user-name-hatena-id{display:none}
 .stl-art .entry-footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--line);justify-self:stretch;width:auto!important;max-width:none!important}
 .stl-art #ad-in-entry{display:flex;flex-direction:column;align-items:center;padding:18px 0 22px;border-block:1px solid var(--line)}
 .stl-art #ad-in-entry::before{content:"AD";font-family:var(--f-pixel);font-size:10.5px;letter-spacing:.24em;color:var(--dim);margin-bottom:12px}
@@ -874,6 +892,9 @@ $$("img.hatena-fotolife", content).forEach(im => {
   const wrap = el("span", "stl-pxw"); wrap.style.width = "fit-content"; wrap.style.maxWidth = "100%";
   host.replaceWith(wrap); wrap.appendChild(host); pixelate(wrap, im);
 });
+
+/* tables: wrap each in a frame that scrolls sideways on narrow screens */
+$$("table", content).forEach(t => { if (t.parentElement.classList.contains("stl-tbl")) return; const w = el("div", "stl-tbl"); w.tabIndex = 0; w.setAttribute("role", "region"); w.setAttribute("aria-label", "表（横にスクロールできます）"); t.replaceWith(w); w.appendChild(t); });
 
 /* ---------- body grid + route map ---------- */
 const body = el("div", "stl-artbody");
@@ -1125,7 +1146,7 @@ function PixPhoto(box, src, owner, { auto = false } = {}) {
     target = to; if (REDUCE) { size = to; draw(); return; } if (timer) return;
     timer = setInterval(() => { size += target > size ? Math.max(1, Math.round((target - size) / 2)) : -Math.max(1, Math.round((size - target) / 2)); if (Math.abs(size - target) < 1) { size = target; clearInterval(timer); timer = null; } draw(); }, 83);
   }
-  if (!src) return;
+  if (!src) { c.remove(); box.classList.add("none"); return; }
   const im = new Image(); im.decoding = "async"; im.onload = () => { img = im; fit(); if (auto || REDUCE) setTimeout(() => go(1), 500); }; im.src = src;
   new ResizeObserver(fit).observe(box);
   // touch screens have no hover: the photo comes into focus while it sits in the middle of the screen
@@ -1359,7 +1380,7 @@ let small = "Archive", title = "記事一覧", cur = "";
 if (mc) { small = "Category"; title = head ? head.textContent.trim() : mc[1]; cur = title; }
 else if (md) { small = "Archive"; title = md[1] + "年" + (md[2] ? +md[2] + "月" : "") + (md[3] ? +md[3] + "日" : "") + "の記事"; }
 const sortCur = $(".archive-entries-sort-current"), sortLink = $(".archive-entries-sort-link");
-const sort = sortCur && sortLink ? `<p>${location.search.includes("orderBy=popular") ? `<a href="${esc(location.pathname)}">新着順</a>　<b>人気順</b>` : `<b>新着順</b>　<a href="${esc(sortLink.getAttribute("href"))}">人気順</a>`}</p>` : `<p class="mono">${posts.length} posts</p>`;
+const sort = sortCur && sortLink ? `<p>${location.search.includes("orderBy=popular") ? `<a href="${esc(location.pathname)}">新着順</a>　<b>人気順</b>` : `<b>新着順</b>　<a href="${esc(sortLink.getAttribute("href"))}">人気順</a>`}</p>` : ($(".pager a") ? "" : `<p class="mono">${posts.length} posts</p>`);
 
 const wrap = el("section", "stl-ar");
 wrap.setAttribute("aria-labelledby", "stl-h-ar");
@@ -1388,7 +1409,7 @@ function PixPhoto(box, src, owner) {
     target = to; if (REDUCE) { size = to; draw(); return; } if (timer) return;
     timer = setInterval(() => { size += target > size ? Math.max(1, Math.round((target - size) / 2)) : -Math.max(1, Math.round((size - target) / 2)); if (Math.abs(size - target) < 1) { size = target; clearInterval(timer); timer = null; } draw(); }, 83);
   }
-  if (!src) return;
+  if (!src) { c.remove(); box.classList.add("none"); return; }
   const im = new Image(); im.decoding = "async"; im.onload = () => { img = im; fit(); if (REDUCE) go(1); }; im.src = src;
   new ResizeObserver(fit).observe(box);
   if (!REDUCE && matchMedia("(hover: none)").matches) new IntersectionObserver(es => es.forEach(e => go(e.isIntersecting ? 1 : REST)), { rootMargin: "-30% 0px -30% 0px" }).observe(box);

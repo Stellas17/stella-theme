@@ -733,3 +733,260 @@ if (pn) {
   }).catch(() => {});
 }
 })();
+
+/* Stella — トップ：星図（記事は星、横は時間、段はカテゴリ）＋ 新しい記事（大きな1本＋行）。
+   はてなのトップ（body.page-index、1ページ目）だけを組み替える。データは /archive と /feed から取る。 */
+(() => {
+"use strict";
+const B = document.body;
+if (!B.classList.contains("page-index") || /[?&]page=/.test(location.search)) return;
+const host = document.querySelector("#main-inner");
+if (!host || host.dataset.stl) return;
+host.dataset.stl = "1";
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const CAT = { ai: ["AI・データ", "#46ecff"], work: ["仕事の仕組み", "#ffb347"], make: ["つくる", "#ff4fa8"], run: ["走る", "#ffd896"], photo: ["撮る", "#b48cff"] };
+const KEYS = Object.keys(CAT);
+const keyOf = name => KEYS.find(k => CAT[k][0] === name) || "ai";
+const jst = d => d.toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+
+const css = `
+:root{--line2:#3a3460;--dim:#5d6088;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
+.c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
+body.stl-top #main-inner>article.entry,body.stl-top #main-inner>.pager{display:none}
+.stl-tp{max-width:76rem;margin:0 auto}
+.stl-tp .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stl-tp .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.stl-tp .tag{font-family:var(--f-pixel);font-size:12px;letter-spacing:.1em;color:var(--c);display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.stl-tp .tag::before{content:"";width:6px;height:6px;background:var(--c);box-shadow:0 0 8px var(--c)}
+.stl-tp .head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-block:56px 18px;border-bottom:1px solid var(--line)}
+.stl-tp .head h2{margin:0;font-family:var(--f-pixel);font-weight:400;font-size:clamp(22px,3vw,30px);letter-spacing:.06em;color:var(--white);border:0;padding:0}
+.stl-tp .head h2 small{display:block;font-size:11.5px;letter-spacing:.24em;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
+.stl-tp .head p{margin:0;max-width:26rem;font-size:13.5px;line-height:1.8;color:var(--muted);text-align:right}
+/* filter */
+.stl-tp .cats{display:flex;flex-wrap:wrap;gap:6px 22px;padding-block:14px 0}
+.stl-tp .cats button{font:inherit;font-family:var(--f-pixel);font-size:13px;letter-spacing:.1em;color:#b9bcdc;background:none;border:0;padding:2px 0;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.stl-tp .cats button::before{content:"";width:6px;height:6px;background:var(--c);opacity:.55}
+.stl-tp .cats button:hover,.stl-tp .cats button[aria-pressed="true"]{color:var(--white)}
+.stl-tp .cats button[aria-pressed="true"]::before{opacity:1;box-shadow:0 0 10px var(--c)}
+.stl-tp .cats button span{font-family:var(--f-mono);font-size:11px;color:var(--dim)}
+/* sky map */
+.stl-sky{position:relative;margin-top:8px;height:clamp(300px,34vw,400px)}
+.stl-sky canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stl-tip{position:absolute;z-index:3;pointer-events:none;min-width:12rem;max-width:18rem;padding:10px 12px;background:rgba(6,5,13,.94);border:1px solid var(--line2);box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;transform:translateY(4px);transition:opacity .15s var(--step),transform .15s var(--step)}
+.stl-tip.on{opacity:1;transform:none}
+.stl-tip b{display:block;font-size:14px;line-height:1.55;color:var(--white);margin-top:4px;font-weight:700}
+.stl-tip span.mono{font-size:11.5px;color:var(--muted)}
+.stl-legend{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between;padding-block:12px 0;font-size:12px;color:var(--dim)}
+/* latest */
+.stl-feature{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:clamp(20px,4vw,56px);align-items:center;padding-block:36px 8px;text-decoration:none;color:inherit}
+.stl-feature h3{margin:.5em 0 .6em;font-size:clamp(24px,3.4vw,38px);line-height:1.45;font-weight:700;letter-spacing:.01em;text-wrap:balance;color:var(--white);border:0;padding:0}
+.stl-feature p{margin:0;color:#b9bcdc;font-size:15px;line-height:1.95}
+.stl-tp .go{margin-top:22px;display:inline-flex;gap:10px;align-items:center;font-family:var(--f-pixel);font-size:13px;letter-spacing:.14em;color:var(--c)}
+.stl-tp .go i{display:inline-block;width:28px;height:2px;background:var(--c);transition:width .25s var(--step)}
+.stl-feature:hover .go i{width:54px}
+.stl-tp .meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.stl-pix{position:relative;display:block;aspect-ratio:4/3;max-width:100%;overflow:hidden;background:var(--surface)}
+.stl-pix canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.stl-pix::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);pointer-events:none}
+.stl-vf{position:absolute;inset:10px;pointer-events:none;z-index:1;opacity:0;transition:opacity .2s var(--step)}
+.stl-vf::before,.stl-vf::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--c)}
+.stl-vf::before{left:0;top:0;border-right:0;border-bottom:0}.stl-vf::after{right:0;bottom:0;border-left:0;border-top:0}
+.stl-tp a:hover .stl-vf,.stl-tp a:focus-visible .stl-vf{opacity:1}
+.stl-rows{list-style:none;margin:0;padding:0}
+.stl-row{border-top:1px solid var(--line);margin:0}
+.stl-row:last-child{border-bottom:1px solid var(--line)}
+.stl-row a{display:grid;grid-template-columns:5.5rem minmax(0,1fr) 200px;gap:clamp(14px,3vw,36px);align-items:center;padding-block:26px;text-decoration:none;color:inherit;position:relative}
+.stl-row .no{font-family:var(--f-mono);font-size:12px;color:var(--dim);align-self:start;padding-top:4px}
+.stl-row h3{margin:.4em 0 .35em;font-size:clamp(17px,2vw,20px);line-height:1.6;font-weight:700;text-wrap:balance;color:var(--text);transition:color .2s var(--step);border:0;padding:0}
+.stl-row p{margin:0;font-size:14px;line-height:1.8;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.stl-row a::before{content:"";position:absolute;left:-16px;top:26px;bottom:26px;width:2px;background:var(--c);transform:scaleY(0);transform-origin:top;transition:transform .25s var(--step);box-shadow:0 0 12px var(--c)}
+.stl-row a:hover::before,.stl-row a:focus-visible::before{transform:none}
+.stl-row a:hover h3{color:var(--white)}
+.stl-row .stl-pix{aspect-ratio:3/2}
+.stl-row.dim{opacity:.28}
+.stl-reveal{clip-path:inset(0 0 100% 0);transition:clip-path .5s var(--step)}
+.stl-reveal.in{clip-path:inset(0 0 0 0)}
+.stl-more{display:flex;justify-content:center;padding-block:40px 80px}
+.stl-more a{font-family:var(--f-pixel);font-size:13px;letter-spacing:.16em;color:var(--text);text-decoration:none;border:1px solid var(--line2);padding:12px 26px}
+.stl-more a:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 18px rgba(70,236,255,.18)}
+@media (max-width:600px){.stl-legend span:nth-child(2){display:none}}
+@media (max-width:820px){.stl-feature{grid-template-columns:1fr}.stl-row a{grid-template-columns:minmax(0,1fr) 112px}.stl-row .no,.stl-row p,.stl-tp .head p{display:none}.stl-row a::before{left:-10px}}
+@media (prefers-reduced-motion:reduce){.stl-reveal{clip-path:none}.stl-tip,.stl-tp .go i,.stl-vf,.stl-row a::before{transition:none}}
+`;
+document.head.appendChild(el("style", null, css)).dataset.stella = "top";
+B.classList.add("stl-top");
+const restore = () => { B.classList.remove("stl-top"); const w = $(".stl-tp"); if (w) w.remove(); };
+
+/* ---------- data ---------- */
+async function loadArchive() {
+  const posts = []; let url = "/archive", n = 0;
+  while (url && n < 12) {
+    const html = await (await fetch(url, { credentials: "same-origin" })).text();
+    const d = new DOMParser().parseFromString(html, "text/html");
+    for (const s of d.querySelectorAll("section.archive-entry")) {
+      const a = s.querySelector(".entry-title a"), t = s.querySelector("time[datetime]"), c = s.querySelector(".categories a"), th = s.querySelector(".entry-thumb"), ds = s.querySelector(".entry-description");
+      if (!a) continue;
+      const m = th && (th.getAttribute("style") || "").match(/url\(['"]?([^'")]+)/);
+      posts.push({ url: a.href, t: a.textContent.trim(), d: t ? new Date(t.getAttribute("datetime") + "T12:00:00+09:00") : new Date(), k: c ? keyOf(c.textContent.trim()) : "ai", cat: c ? c.textContent.trim() : "", thumb: m ? m[1] : "", desc: ds ? ds.textContent.trim().replace(/\s+/g, " ") : "" });
+    }
+    const nx = d.querySelector(".pager-next a"); url = nx ? nx.getAttribute("href") : null; n++;
+  }
+  return posts;
+}
+async function loadFeed() {
+  try {
+    const x = await (await fetch("/feed")).text(), d = new DOMParser().parseFromString(x, "application/xml"), m = {};
+    for (const e of d.getElementsByTagName("entry")) {
+      const ls = [...e.getElementsByTagName("link")], u = ls.find(l => !l.getAttribute("rel")), enc = ls.find(l => l.getAttribute("rel") === "enclosure");
+      const c = e.getElementsByTagName("content")[0], p = e.getElementsByTagName("published")[0];
+      const txt = c ? new DOMParser().parseFromString(c.textContent, "text/html").body.textContent.replace(/\s/g, "") : "";
+      if (u) m[u.getAttribute("href")] = { len: txt ? Math.max(1, Math.round(txt.length / 500)) : 0, img: enc ? enc.getAttribute("href") : "", at: p ? new Date(p.textContent) : null };
+    }
+    return m;
+  } catch (e) { return {}; }
+}
+
+/* ---------- pixel photo: dim pixels at rest, resolves when looked at (drawImage only; CDN has no CORS) ---------- */
+function PixPhoto(box, src, owner, { auto = false } = {}) {
+  const c = el("canvas"); box.prepend(c); const x = c.getContext("2d"), t = document.createElement("canvas"), tx = t.getContext("2d");
+  const REST = 14; let img = null, size = REST, target = REST, timer = null;
+  function fit() { const r = box.getBoundingClientRect(); c.width = Math.max(1, Math.round(r.width)); c.height = Math.max(1, Math.round(r.height)); draw(); }
+  function draw() {
+    if (!img) return; const w = c.width, h = c.height;
+    const s = Math.max(w / img.naturalWidth, h / img.naturalHeight), sw = w / s, sh = h / s, sx = (img.naturalWidth - sw) / 2, sy = (img.naturalHeight - sh) / 2;
+    if (size <= 1) { x.imageSmoothingEnabled = true; x.filter = "none"; x.drawImage(img, sx, sy, sw, sh, 0, 0, w, h); return; }
+    const tw = Math.max(2, Math.round(w / size)), th = Math.max(2, Math.round(h / size)); t.width = tw; t.height = th; tx.imageSmoothingEnabled = true; tx.drawImage(img, sx, sy, sw, sh, 0, 0, tw, th);
+    const k = Math.min(1, (size - 1) / (REST - 1)); x.imageSmoothingEnabled = false; x.filter = `brightness(${1 - .38 * k}) saturate(${1 - .2 * k})`; x.drawImage(t, 0, 0, w, h); x.filter = "none";
+  }
+  function go(to) {
+    target = to; if (REDUCE) { size = to; draw(); return; } if (timer) return;
+    timer = setInterval(() => { size += target > size ? Math.max(1, Math.round((target - size) / 2)) : -Math.max(1, Math.round((size - target) / 2)); if (Math.abs(size - target) < 1) { size = target; clearInterval(timer); timer = null; } draw(); }, 83);
+  }
+  if (!src) return;
+  const im = new Image(); im.decoding = "async"; im.onload = () => { img = im; fit(); if (auto || REDUCE) setTimeout(() => go(1), 500); }; im.src = src;
+  new ResizeObserver(fit).observe(box);
+  if (!auto && !REDUCE) { owner.addEventListener("mouseenter", () => go(1)); owner.addEventListener("mouseleave", () => go(REST)); owner.addEventListener("focus", () => go(1)); owner.addEventListener("blur", () => go(REST)); }
+}
+
+/* ---------- build ---------- */
+Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
+  if (!posts.length) { restore(); return; }
+  posts.forEach(p => { const f = feed[p.url]; p.len = f && f.len ? f.len : Math.max(1, Math.round(p.desc.length / 120) + 2); p.big = f && f.img ? f.img : p.thumb; if (f && f.at) p.d = f.at; });
+  posts.sort((a, b) => b.d - a.d);
+  const wrap = el("div", "stl-tp");
+  const counts = {}; posts.forEach(p => counts[p.k] = (counts[p.k] || 0) + 1);
+
+  /* sky */
+  const skySec = el("section", "", `<div class="head"><h2 id="stl-h-sky"><small>Sky map</small>書いてきたもの</h2><p>記事は星、横は時間、段はカテゴリ。同じカテゴリの記事を線で結ぶと星座になります。星を押すと記事が開きます。</p></div>
+<div class="cats" role="group" aria-label="カテゴリで絞り込む">${KEYS.map(k => `<button type="button" class="c-${k}" data-k="${k}" aria-pressed="false">${CAT[k][0]}<span>${counts[k] || 0}</span></button>`).join("")}</div>
+<div class="stl-sky"><canvas aria-hidden="true"></canvas><div class="stl-tip" role="status"></div></div><div class="stl-legend mono"></div>
+<ul class="sr" aria-label="すべての記事">${posts.map(p => `<li><a href="${esc(p.url)}">${jst(p.d)} ${esc(p.cat)}：${esc(p.t)}</a></li>`).join("")}</ul>`);
+  skySec.setAttribute("aria-labelledby", "stl-h-sky");
+  wrap.appendChild(skySec);
+
+  /* latest */
+  const f0 = posts[0], rest = posts.slice(1, 7);
+  const latest = el("section", "", `<div class="head"><h2 id="stl-h-latest"><small>Latest</small>新しい記事</h2><p>写真はふだんドットのまま。見ようとすると、ピントが合います。</p></div>
+<a href="${esc(f0.url)}" class="stl-feature c-${f0.k}"><span class="stl-pix"><span class="stl-vf"></span></span><span><span class="meta"><span class="tag">${esc(f0.cat || CAT[f0.k][0])}</span><time datetime="${jst(f0.d)}">${jst(f0.d)}</time><span>${f0.len} 分</span></span><h3>${esc(f0.t)}</h3><p>${esc(f0.desc.slice(0, 110))}${f0.desc.length > 110 ? "…" : ""}</p><span class="go">読む<i></i></span></span></a>
+<ol class="stl-rows" aria-label="これまでの記事">${rest.map((p, i) => `<li class="stl-row stl-reveal c-${p.k}" data-k="${p.k}"><a href="${esc(p.url)}"><span class="no">No.${String(posts.length - 1 - i).padStart(3, "0")}</span><span style="min-width:0"><span class="meta"><span class="tag">${esc(p.cat || CAT[p.k][0])}</span><time datetime="${jst(p.d)}">${jst(p.d)}</time><span>${p.len} 分</span></span><h3>${esc(p.t)}</h3><p>${esc(p.desc)}</p></span><span class="stl-pix"><span class="stl-vf"></span></span></a></li>`).join("")}</ol>
+<div class="stl-more"><a href="/archive">記事一覧へ</a></div>`);
+  latest.setAttribute("aria-labelledby", "stl-h-latest");
+  wrap.appendChild(latest);
+  host.prepend(wrap);
+
+  const fa = $(".stl-feature", latest); PixPhoto($(".stl-pix", fa), f0.big, fa);
+  $$(".stl-row", latest).forEach((li, i) => { const a = $("a", li); PixPhoto($(".stl-pix", a), rest[i].thumb || rest[i].big, a); });
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
+  $$(".stl-reveal", latest).forEach(r => REDUCE ? r.classList.add("in") : io.observe(r));
+
+  /* ---------- sky map ---------- */
+  const sky = $(".stl-sky", skySec), sc = $("canvas", sky), sx = sc.getContext("2d"), tip = $(".stl-tip", sky);
+  let filter = null, hover = -1, drawT = null, dust = [], G = null;
+  const DAY = 864e5, now = Date.now();
+  const end = Math.max(now, f0.d.getTime()) + DAY * 2;
+  const start = Math.min(posts[posts.length - 1].d.getTime() - DAY * 7, end - DAY * 90);
+  let seed = 7; const R = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
+  function layout() {
+    const r = sky.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+    sc.width = r.width * dpr; sc.height = r.height * dpr; sx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = r.width, H = r.height, padL = W < 600 ? 16 : 110, padR = 40, top = 26, bot = 40, lane = (H - top - bot) / KEYS.length;
+    const used = {};
+    posts.slice().reverse().forEach(p => {
+      p.x = padL + (p.d - start) / (end - start) * (W - padL - padR);
+      // spread stars that would sit on top of each other in the same lane
+      const key = p.k, list = used[key] || (used[key] = []); let j = 0;
+      while (list.some(q => Math.abs(q.x - p.x) < 14 && q.j === j)) j++;
+      list.push({ x: p.x, j }); const off = j === 0 ? 0 : (j % 2 ? -1 : 1) * Math.ceil(j / 2) * 12;
+      p.y = top + lane * (KEYS.indexOf(key) + .5) + off + Math.sin(p.d / DAY) * lane * .12;
+      p.r = 3 + Math.min(12, p.len) / 4;
+    });
+    seed = 7; dust = Array.from({ length: Math.round(W * H / 2600) }, () => [R() * W, R() * H, R()]);
+    G = { W, H, padL, padR, top, bot, lane };
+  }
+  function draw(t) {
+    if (!G) return; const { W, H, padL, padR, bot, top, lane } = G; sx.clearRect(0, 0, W, H);
+    const step = REDUCE ? 0 : Math.floor(t * 10) / 10;
+    for (const [a, b, c] of dust) { const tw = .25 + .25 * Math.sin(step * 1.3 + c * 40); sx.fillStyle = `rgba(200,210,255,${tw * .5})`; sx.fillRect(Math.round(a), Math.round(b), 1, 1); }
+    sx.font = "11px DotGothic16, monospace"; sx.textBaseline = "middle";
+    KEYS.forEach((k, i) => { const y = top + lane * (i + .5), on = !filter || filter === k; sx.fillStyle = on ? CAT[k][1] : "#3a3460"; sx.globalAlpha = on ? .85 : .6; if (W >= 600) sx.fillText(CAT[k][0], 16, y); sx.globalAlpha = 1;
+      sx.strokeStyle = "rgba(58,52,96,.35)"; sx.setLineDash([2, 6]); sx.beginPath(); sx.moveTo(padL, y); sx.lineTo(W - padR, y); sx.stroke(); sx.setLineDash([]); });
+    // month ticks
+    sx.font = "10.5px 'JetBrains Mono', monospace"; sx.fillStyle = "#5d6088"; sx.textBaseline = "alphabetic";
+    const s0 = new Date(start), months = []; for (let d = new Date(s0.getFullYear(), s0.getMonth() + 1, 1); d.getTime() < end; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) months.push(d);
+    const every = Math.max(1, Math.ceil(months.length / (W < 600 ? 4 : 12)));
+    months.forEach((d, i) => { const x = padL + (d - start) / (end - start) * (W - padL - padR); sx.fillRect(Math.round(x), H - bot + 6, 1, 4); if (i % every === 0) sx.fillText(String(d.getMonth() + 1).padStart(2, "0"), Math.round(x) - 6, H - bot + 24); });
+    // constellations draw in after first view
+    const prog = drawT === null ? 0 : Math.min(1, (t - drawT) / 1.6);
+    KEYS.forEach(k => {
+      const ps = posts.filter(p => p.k === k).sort((a, b) => a.d - b.d), on = !filter || filter === k; if (ps.length < 2) return;
+      sx.strokeStyle = CAT[k][1]; sx.globalAlpha = on ? (filter ? .75 : .38) : .08; sx.lineWidth = 1; sx.beginPath();
+      const total = ps.length - 1, lim = REDUCE ? total : Math.floor(prog * total * 6) / 6;
+      for (let i = 0; i < total; i++) { if (i >= lim) break; const a = ps[i], b = ps[i + 1], f = Math.min(1, lim - i); sx.moveTo(a.x, a.y); sx.lineTo(a.x + (b.x - a.x) * f, a.y + (b.y - a.y) * f); }
+      sx.stroke(); sx.globalAlpha = 1;
+    });
+    // stars: pixel crosses; size = reading time
+    posts.forEach((p, i) => {
+      const on = !filter || filter === p.k, hv = i === hover, col = CAT[p.k][1], tw = .75 + .25 * Math.sin(step * 1.7 + i * 1.3);
+      const r = Math.round(p.r * (hv ? 1.7 : 1)), q = Math.max(2, Math.round(r / 2)), X = Math.round(p.x), Y = Math.round(p.y);
+      sx.save(); sx.globalAlpha = on ? tw : .18; if (on) { sx.shadowColor = col; sx.shadowBlur = hv ? 18 : 8; }
+      sx.fillStyle = hv ? "#ffffff" : col; sx.fillRect(X - r, Y - Math.floor(q / 2), r * 2, q); sx.fillRect(X - Math.floor(q / 2), Y - r, q, r * 2);
+      sx.fillStyle = "#fff"; sx.fillRect(X - 1, Y - 1, 2, 2); sx.restore();
+    });
+    // the newest post wears Stella's four-pointed star
+    const n = posts[0];
+    if (!filter || filter === n.k) {
+      const R0 = 10 + 2 * Math.sin((REDUCE ? 0 : t) * 1.2); sx.save(); sx.shadowColor = "#9ec4ff"; sx.shadowBlur = 16; sx.fillStyle = "#f2f8ff"; sx.beginPath();
+      sx.moveTo(n.x, n.y - R0 * 1.6); sx.lineTo(n.x + 2, n.y - 2); sx.lineTo(n.x + R0 * 1.6, n.y); sx.lineTo(n.x + 2, n.y + 2); sx.lineTo(n.x, n.y + R0 * 1.6); sx.lineTo(n.x - 2, n.y + 2); sx.lineTo(n.x - R0 * 1.6, n.y); sx.lineTo(n.x - 2, n.y - 2); sx.closePath(); sx.fill(); sx.restore();
+      sx.font = "10.5px 'JetBrains Mono', monospace"; sx.fillStyle = "#f2f8ff"; sx.textAlign = "right"; sx.fillText("NOW", n.x - 14, n.y - 12); sx.textAlign = "left";
+    }
+  }
+  function pick(e) { const r = sc.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top; let best = -1, bd = 18 * 18; posts.forEach((p, i) => { if (filter && p.k !== filter) return; const d = (p.x - mx) ** 2 + (p.y - my) ** 2; if (d < bd) { bd = d; best = i; } }); return best; }
+  sc.addEventListener("pointermove", e => {
+    const i = pick(e); hover = i; sc.style.cursor = i >= 0 ? "pointer" : "default";
+    if (i >= 0) {
+      const p = posts[i]; tip.innerHTML = `<span class="tag" style="--c:${CAT[p.k][1]}">${esc(p.cat || CAT[p.k][0])}</span> <span class="mono">${jst(p.d)}・${p.len} 分</span><b>${esc(p.t)}</b>`;
+      let L = p.x + 16; const T = p.y - 20; tip.classList.add("on"); const tw = tip.offsetWidth; if (L + tw > G.W - 8) L = p.x - 16 - tw;
+      tip.style.left = Math.max(8, L) + "px"; tip.style.top = Math.max(4, Math.min(G.H - tip.offsetHeight - 4, T)) + "px";
+    } else tip.classList.remove("on");
+    if (REDUCE) draw(0);
+  });
+  sc.addEventListener("pointerleave", () => { hover = -1; tip.classList.remove("on"); if (REDUCE) draw(0); });
+  sc.addEventListener("click", e => { const i = pick(e); if (i >= 0) location.href = posts[i].url; });
+  $(".stl-legend", skySec).innerHTML = `<span>${jst(new Date(start))}</span><span>${posts.length} posts・星の大きさ＝読む時間</span><span>${jst(new Date(end - DAY * 2))}</span>`;
+  // category filter: light one constellation and dim the rows of other categories
+  $$(".cats button", skySec).forEach(b => b.addEventListener("click", () => {
+    const k = b.dataset.k; filter = filter === k ? null : k;
+    $$(".cats button", skySec).forEach(x => x.setAttribute("aria-pressed", String(x.dataset.k === filter)));
+    $$(".stl-row", latest).forEach(r => r.classList.toggle("dim", !!filter && r.dataset.k !== filter));
+    if (REDUCE) draw(0);
+  }));
+  let vis = false;
+  new IntersectionObserver(es => { vis = es[0].isIntersecting; if (vis && drawT === null) drawT = performance.now() / 1000; }, { threshold: .2 }).observe(sky);
+  layout(); let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { layout(); draw(performance.now() / 1000); }, 150); });
+  if (REDUCE) draw(0);
+  else { let last = 0; (function loop(ms) { requestAnimationFrame(loop); if (!vis || ms - last < 83) return; last = ms; draw(ms / 1000); })(0); }
+}).catch(restore);
+})();

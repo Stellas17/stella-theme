@@ -319,9 +319,78 @@ function AlleyFooter(sec,SRC){
   return{resize:layout,scroll,frame,showAd:v=>{ad.classList.toggle("on",v&&powered)}};
 }
 
+/* ================= title: "Stella" as a pixel neon sign, with Stella's four-pointed star over the a =================
+   Glyphs are 1-dot skeletons; each dot becomes a glass tube (magenta body, white-hot core) joined to its neighbours.
+   The sign powers on with a stutter, then now and then a letter flickers or the whole sign browns out. */
+function NeonLogo(a,getScale){
+  const SK={
+    S:[".XXX.","X...X","X....","X....",".XXX.","....X","....X","X...X",".XXX."],
+    t:[".X..",".X..","XXX.",".X..",".X..",".X..",".X..",".X..","..XX"],
+    e:[".....",".....",".....",".XXX.","X...X","XXXXX","X....","X...X",".XXX."],
+    l:["X.","X.","X.","X.","X.","X.","X.","X.",".X"],
+    a:[".....",".....",".....",".XXX.","....X",".XXXX","X...X","X...X",".XXXX"]};
+  const WORD=["S","t","e","l","l","a"],PAD=3,TOP=4;   // TOP: room above for the star
+  const label=a.textContent.trim()||"Stella";
+  a.textContent="";a.classList.add("stl-neon");
+  const sr=document.createElement("span");sr.className="stl-sr";sr.textContent=label;
+  const c=document.createElement("canvas");c.setAttribute("aria-hidden","true");a.append(c,sr);
+  const x=c.getContext("2d");
+  let cell=8,dots=[],set=new Set(),cols=0,star=[0,0];
+  function layout(){
+    cell=Math.max(6,Math.round(getScale()*3.5));dots=[];let cx=0;
+    WORD.forEach((ch,i)=>{SK[ch].forEach((row,y)=>[...row].forEach((v,gx)=>{if(v==="X")dots.push([cx+gx,y,i])}));cx+=SK[ch][0].length+1});
+    cols=cx-1;set=new Set(dots.map(([a,b])=>a+","+b));
+    star=[cols-1.5,-2.5];                                  // above the a, a little to the right
+    c.width=(cols+PAD*2)*cell;c.height=(9+PAD+TOP)*cell;c.style.width=c.width+"px";c.style.height=c.height+"px";
+  }
+  // lit state per letter: 1 on, 0 off, values between = brown-out
+  const lit=[1,1,1,1,1,1];let boot=null,ev=null,nextEv=6+Math.random()*6;
+  const R=(()=>{let s=12345;return()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296)})();
+  function schedule(t){
+    if(boot===null)boot=t;
+    const b=t-boot;
+    if(b<1.4){for(let i=0;i<6;i++){const on=b>.15+i*.12+R()*.25;lit[i]=on?(Math.sin(t*40+i*3)>-.2||b>1.1?1:.15):0}return}
+    lit.fill(1);
+    if(!ev&&t>boot+nextEv){ev=R()<.65?{k:"one",i:Math.floor(R()*6),t0:t,d:.35+R()*.35}:{k:"all",t0:t,d:.28};nextEv=(t-boot)+8+R()*9}
+    if(ev){const e=t-ev.t0;if(e>ev.d){ev=null;return}
+      const blink=Math.floor(e*16)%2===0;
+      if(ev.k==="one")lit[ev.i]=blink?.08:1;else lit.fill(blink?.35:1)}
+  }
+  function tube(px,py,w,col){x.fillStyle=col;x.fillRect(px,py,w,w)}
+  function draw(t){
+    x.clearRect(0,0,c.width,c.height);
+    const o=(gx,gy)=>[(gx+PAD)*cell,(gy+TOP)*cell];
+    const body=Math.max(2,Math.round(cell*.74)),core=Math.max(1,Math.round(cell*.28)),bo=(cell-body)>>1,co=(cell-core)>>1;
+    const has=(a,b)=>set.has(a+","+b);
+    const seg=(gx,gy,w,off,col)=>{const[X,Y]=o(gx,gy);x.fillStyle=col;x.fillRect(X+off,Y+off,w,w);
+      if(has(gx+1,gy))x.fillRect(X+off,Y+off,cell,w);if(has(gx,gy+1))x.fillRect(X+off,Y+off,w,cell);
+      // diagonal steps (the rounded corners of S, the tails of t and l): a short tube between the two dot centres
+      for(const d of[1,-1])if(has(gx+d,gy+1)&&!has(gx+d,gy)&&!has(gx,gy+1)){x.strokeStyle=col;x.lineWidth=w;x.lineCap="square";x.beginPath();
+        x.moveTo(X+cell/2,Y+cell/2);x.lineTo(X+cell/2+d*cell,Y+cell*1.5);x.stroke()}};
+    const breathe=.9+.1*Math.sin(t*1.7);
+    // glow
+    x.save();x.shadowColor="rgba(255,79,168,.95)";x.shadowBlur=cell*4;
+    for(const[gx,gy,i]of dots){if(lit[i]<.3)continue;x.globalAlpha=lit[i]*breathe;seg(gx,gy,body,bo,"#ff4fa8")}x.restore();x.globalAlpha=1;
+    // faint cyan ghost one dot-third to the left (the lens' chromatic edge)
+    x.save();x.globalAlpha=.28;x.translate(-Math.round(cell/3),0);for(const[gx,gy,i]of dots){if(lit[i]<.3)continue;seg(gx,gy,body,bo,"#46ecff")}x.restore();
+    // tubes: dark glass when off, magenta body + white-hot core when on
+    for(const[gx,gy,i]of dots){const L=lit[i];x.globalAlpha=L<.3?1:Math.min(1,.55+.45*L);seg(gx,gy,body,bo,L<.3?"#3a1832":"#ff6fbc")}
+    for(const[gx,gy,i]of dots){const L=lit[i];if(L<.3)continue;x.globalAlpha=Math.min(1,.55+.45*L);seg(gx,gy,core,co,"#fff0f8")}
+    x.globalAlpha=1;
+    // Stella's star: a pixel four-pointed star that twinkles on its own rhythm
+    const p=.55+.45*Math.sin(t*1.25),[sx,sy]=o(star[0],star[1]),u=Math.max(2,Math.round(cell*.5)),cxp=sx+cell/2,cyp=sy+cell/2;
+    x.save();x.shadowColor="rgba(158,210,255,1)";x.shadowBlur=cell*2.4*p;x.fillStyle="#eaf6ff";x.globalAlpha=.75+.25*p;
+    const arm=Math.round(cell*(1.6+.5*p));
+    x.fillRect(Math.round(cxp-u/2),Math.round(cyp-arm),u,arm*2);x.fillRect(Math.round(cxp-arm),Math.round(cyp-u/2),arm*2,u);
+    x.fillStyle="#ffffff";x.fillRect(Math.round(cxp-u),Math.round(cyp-u),u*2,u*2);x.restore();
+  }
+  layout();
+  return{layout,tick(t,motion){if(Math.max(6,Math.round(getScale()*3.5))!==cell)layout();if(motion)schedule(t);else lit.fill(1);draw(motion?t:0)}};
+}
+
 /* ---------------- boot ---------------- */
 const hero=$("#stl-hero"),alley=$("#stl-alley"),brand=$("#stl-brand");
-let heroS=null,alleyS=null,vis={hero:true,alley:false};
+let heroS=null,alleyS=null,logoS=null,vis={hero:true,alley:false};
 let px=0,py=0,cx=0,cy=0,last=performance.now();
 hero.addEventListener("pointermove",e=>{const r=hero.getBoundingClientRect();px=((e.clientX-r.left)/r.width)*2-1;py=((e.clientY-r.top)/r.height)*2-1});
 hero.addEventListener("pointerleave",()=>{px=0;py=0});
@@ -329,7 +398,7 @@ function render(now){
   const t=now/1000;last=now;
   cx+=(px-cx)*.05;cy+=(py-cy)*.05;
   const sy=Math.min(scrollY,hero.offsetHeight);
-  if(heroS&&vis.hero&&(!state.motion||now-lastHero>=83)){lastHero=now;heroS.frame(t)}
+  if(heroS&&vis.hero&&(!state.motion||now-lastHero>=83)){lastHero=now;heroS.frame(t);logoS&&logoS.tick(t,state.motion)}
   if(alleyS&&vis.alley&&(!state.motion||now-lastAlley>=83)){lastAlley=now;alleyS.frame(t)}
   brand.style.transform=`translate3d(${(-cx*10).toFixed(1)}px,${(sy*.4).toFixed(1)}px,0)`;brand.style.opacity=Math.max(0,1-sy/(hero.offsetHeight*.7)).toFixed(3);
 }
@@ -338,12 +407,13 @@ function loop(now){requestAnimationFrame(loop);if(document.hidden)return;if(!sta
 function once(){last=performance.now();lastAlley=0;render(performance.now())}
 function start(){
   try{heroS=ImageHero($("#px-hero"),$("#px-glow"),$("#px-dof"),HERO_SRC);heroS.resize();setTimeout(()=>window.__placeEgg&&window.__placeEgg(),300)}catch(err){console.warn(err);hero.classList.add("no-gl")}
+  try{const ta=$(".stl-title a");if(ta)logoS=NeonLogo(ta,()=>heroS&&heroS.geo?heroS.geo().scale:3)}catch(err){console.warn(err)}
   try{alleyS=AlleyFooter(alley,ALLEY_SRC)}catch(err){console.warn(err)}
   new IntersectionObserver(es=>{for(const e of es)vis.hero=e.isIntersecting;if(!state.motion)once()},{rootMargin:"100px"}).observe(hero);
   new IntersectionObserver(es=>{for(const e of es)vis.alley=e.isIntersecting;if(!state.motion)once()},{rootMargin:"200px"}).observe(alley);
   once();requestAnimationFrame(loop);
 }
-let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{heroS&&heroS.resize();alleyS&&alleyS.resize();alleyS&&alleyS.scroll();once()},150)});
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{heroS&&heroS.resize();logoS&&logoS.layout();alleyS&&alleyS.resize();alleyS&&alleyS.scroll();once()},150)});
 addEventListener("scroll",()=>{if(alleyS&&alleyS.scroll()&&vis.alley){lastAlley=0;if(!state.motion)once()}},{passive:true});
 /* clock */
 const clk=$("#stl-clock"),fmt=new Intl.DateTimeFormat("ja-JP",{timeZone:"Asia/Tokyo",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
@@ -378,4 +448,288 @@ bindT("#t-motion","motion",()=>{});bindT("#t-ad","ad",()=>{alleyS&&alleyS.showAd
 const fontsReady=document.fonts?Promise.race([document.fonts.load('16px "DotGothic16"').then(()=>document.fonts.ready),new Promise(r=>setTimeout(r,2500))]):Promise.resolve();
 fontsReady.then(start,start);
 window.__stella={get vis(){return vis}};
+})();
+
+/* Stella — 記事ページ：路線図の目次、章番号、タイトルのデコード、読む時間、ドット→写真、次の記事。
+   はてなの記事ページ（body.page-entry）の DOM を、その場で組み替える。本文の HTML には手を入れない。 */
+(() => {
+"use strict";
+if (!document.body.classList.contains("page-entry")) return;
+const entry = document.querySelector("article.entry"), content = entry && entry.querySelector(".entry-content");
+if (!entry || !content || entry.dataset.stl) return;
+entry.dataset.stl = "1";
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const CAT = { "AI・データ": "ai", "仕事の仕組み": "work", "つくる": "make", "走る": "run", "撮る": "photo" };
+const catKey = name => CAT[name] || "ai";
+
+/* ---------- CSS（デザインCSS 欄を増やさないよう、ここで入れる） ---------- */
+const css = `
+:root{--line2:#3a3460;--dim:#5d6088;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
+.c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
+body.stl-art{--c:var(--cyan)}
+.stl-art article.entry{max-width:76rem;margin-inline:auto}
+.stl-art .entry-inner{display:block}
+/* head */
+.stl-art .entry-header{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:clamp(20px,4vw,56px);align-items:end;margin:0;padding-block:40px 40px;border-bottom:1px solid var(--line)}
+.stl-art .entry-header.no-photo{grid-template-columns:minmax(0,52rem)}
+.stl-art .entry-date{display:none}
+.stl-art .art-meta{display:flex;gap:16px;align-items:center}
+.stl-art .entry-categories{display:flex;gap:14px;margin:0}
+.stl-art .entry-categories a,.stl-tag{font-family:var(--f-pixel);font-size:12px;letter-spacing:.1em;color:var(--c);display:inline-flex;align-items:center;gap:7px;white-space:nowrap;text-decoration:none;background:none;padding:0;border:0}
+.stl-art .entry-categories a::before,.stl-tag::before{content:"";width:6px;height:6px;background:var(--c);box-shadow:0 0 8px var(--c)}
+.stl-art .entry-categories a:hover{color:var(--white)}
+.stl-art h1.entry-title{margin:.45em 0 .2em;font-size:clamp(28px,4.4vw,46px);line-height:1.38;font-weight:700;letter-spacing:.005em;text-wrap:balance}
+.stl-art h1.entry-title a{color:var(--white);text-decoration:none}
+.stl-facts{display:grid;grid-template-columns:repeat(3,auto);justify-content:start;gap:4px 28px;margin:22px 0 0}
+.stl-facts div{display:grid;gap:2px}
+.stl-facts dt{font-family:var(--f-pixel);font-size:10.5px;letter-spacing:.2em;color:var(--dim)}
+.stl-facts dd{margin:0;font-family:var(--f-mono);font-size:13px;color:var(--text);font-variant-numeric:tabular-nums}
+.stl-photo{position:relative;display:block;aspect-ratio:4/3;overflow:hidden;background:var(--surface);margin:0}
+.stl-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;margin:0}
+.stl-photo .cap{position:absolute;right:10px;bottom:8px;z-index:2;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.06em;color:rgba(246,242,255,.72);text-shadow:0 1px 2px #000}
+/* pixel → photo */
+.stl-pxw{position:relative;display:block}
+.stl-pxw>canvas.stl-pxc{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none;z-index:1}
+/* body grid */
+.stl-artbody{display:grid;grid-template-columns:14rem minmax(0,40rem) 1fr;gap:clamp(24px,4vw,64px);padding-block:48px 0}
+.stl-artbody.no-route{grid-template-columns:minmax(0,40rem);justify-content:center}
+.stl-artbody>.entry-content,.stl-artbody>.entry-footer{grid-column:2;min-width:0}
+.stl-artbody.no-route>.entry-content,.stl-artbody.no-route>.entry-footer{grid-column:1}
+.stl-art .entry-content{font-size:16.5px}
+.stl-art .entry-content h3{position:relative;font-size:1.42em;line-height:1.5;font-weight:700;margin-top:3.2em;padding:0;border:0;scroll-margin-top:32px;text-wrap:balance;color:var(--white)}
+.stl-art .entry-content h3 .stl-n{display:block;font-family:var(--f-mono);font-size:12px;font-weight:400;letter-spacing:.1em;color:var(--c);margin-bottom:6px}
+.stl-art .entry-content h4{font-size:1.1em;line-height:1.6;font-weight:700;margin-top:2.3em;scroll-margin-top:32px;padding-left:14px;border-left:2px solid var(--line2)}
+.stl-art .entry-content h3+*,.stl-art .entry-content h4+*{margin-top:1em}
+.stl-art .entry-content strong{color:var(--white);background:linear-gradient(transparent 70%,color-mix(in srgb,var(--c) 22%,transparent) 0)}
+.stl-art .entry-content img{max-width:100%;height:auto;display:block}
+.stl-art .entry-footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--line);justify-self:stretch;width:auto!important;max-width:none!important}
+.stl-art #ad-in-entry{display:flex;flex-direction:column;align-items:center;padding:18px 0 22px;border-block:1px solid var(--line)}
+.stl-art #ad-in-entry::before{content:"AD";font-family:var(--f-pixel);font-size:10.5px;letter-spacing:.24em;color:var(--dim);margin-bottom:12px}
+/* route map */
+.stl-route{position:sticky;top:28px;align-self:start;font-size:13.5px;line-height:1.5;max-height:calc(100vh - 56px);overflow:auto;scrollbar-width:none}
+.stl-route .lab{display:flex;justify-content:space-between;margin-bottom:16px;font-family:var(--f-pixel);font-size:11.5px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase}
+.stl-route .lab span+span{font-family:var(--f-mono);letter-spacing:.06em;color:var(--dim)}
+.stl-route .rail{position:relative}.stl-route ol{list-style:none;margin:0;padding:0;position:relative}
+.stl-route ol::before,.stl-route .fill{content:"";position:absolute;left:5px;top:8px;width:2px;background:var(--line2)}
+.stl-route ol::before{bottom:8px}
+.stl-route .fill{background:var(--c);box-shadow:0 0 10px var(--c);height:0;transition:height .2s var(--step);z-index:0}
+.stl-route li{position:relative;padding-left:26px;margin:0}
+.stl-route li a{display:block;padding:7px 0;color:var(--muted);text-decoration:none;transition:color .15s var(--step)}
+.stl-route li a:hover{color:var(--text)}
+.stl-route li::before{content:"";position:absolute;left:1px;top:13px;width:10px;height:10px;background:var(--bg);box-shadow:inset 0 0 0 2px var(--line2);z-index:1}
+.stl-route li.sub::before{left:3px;top:15px;width:6px;height:6px}
+.stl-route li.sub a{font-size:12.5px;padding:4px 0 4px 12px}
+.stl-route li.done::before{background:var(--c);box-shadow:none}
+.stl-route li.now::before{background:var(--white);box-shadow:0 0 0 2px var(--c),0 0 14px var(--c)}
+.stl-route li.now>a{color:var(--white)}
+.stl-route li .n{font-family:var(--f-mono);font-size:11px;color:var(--dim);margin-right:8px}
+.stl-route li.now .n{color:var(--c)}
+/* mobile: now-bar */
+.stl-nowbar{display:none;position:sticky;top:0;z-index:30;margin-inline:-16px;background:rgba(11,10,20,.94);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.stl-nowbar button{width:100%;display:flex;gap:10px;align-items:center;font:inherit;font-size:13px;color:var(--text);background:none;border:0;padding:10px 16px;text-align:left;cursor:pointer}
+.stl-nowbar .n{font-family:var(--f-mono);font-size:11px;color:var(--c)}
+.stl-nowbar .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stl-nowbar .bar{position:absolute;left:0;bottom:-1px;height:2px;background:var(--c);width:0;box-shadow:0 0 8px var(--c)}
+.stl-nowbar ol[hidden]{display:none}
+.stl-nowbar ol{list-style:none;margin:0;padding:4px 16px 14px;display:grid;gap:2px;max-height:60vh;overflow:auto}
+.stl-nowbar ol li{margin:0}
+.stl-nowbar ol a{display:block;padding:6px 0;color:var(--muted);text-decoration:none;font-size:14px}
+.stl-nowbar ol li.sub a{padding-left:16px;font-size:13px}
+.stl-nowbar ol li.now a{color:var(--white)}
+/* next stop */
+.stl-next{max-width:76rem;margin:0 auto 80px;padding-inline:0}
+.stl-next a{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,4vw,56px);align-items:center;text-decoration:none;color:inherit;border-top:1px solid var(--line);padding-top:40px}
+.stl-next.no-photo a{grid-template-columns:1fr}
+.stl-next .lab{display:block;margin-bottom:12px;font-family:var(--f-pixel);font-size:11.5px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase}
+.stl-next h2{margin:.4em 0 0;font-size:clamp(22px,3vw,32px);line-height:1.45;font-weight:700;color:var(--white);text-wrap:balance}
+.stl-next .go{display:inline-flex;gap:10px;align-items:center;margin-top:18px;font-family:var(--f-pixel);font-size:12.5px;letter-spacing:.16em;color:var(--c)}
+.stl-next .go i{display:block;width:28px;height:2px;background:var(--c);transition:width .2s var(--step)}
+.stl-next a:hover .go i{width:52px}
+.stl-next .stl-photo{aspect-ratio:16/9}
+.stl-art .pager-permalink{display:none}
+@media (max-width:1100px){.stl-artbody{grid-template-columns:12rem minmax(0,40rem)}}
+@media (max-width:900px){
+  .stl-art .entry-header{grid-template-columns:1fr;padding-block:28px 32px}
+  .stl-art .entry-header .stl-photo{order:-1;aspect-ratio:16/10}
+  .stl-artbody,.stl-artbody.no-route{grid-template-columns:minmax(0,40rem);justify-content:center;padding-top:32px}
+  .stl-artbody>.entry-content,.stl-artbody>.entry-footer{grid-column:1}
+  .stl-route{display:none}.stl-nowbar{display:block}
+  .stl-next a{grid-template-columns:1fr}.stl-next .stl-photo{order:-1}
+}
+@media (prefers-reduced-motion:reduce){.stl-route .fill,.stl-route li a,.stl-next .go i{transition:none}}
+`;
+document.head.appendChild(el("style", null, css)).dataset.stella = "article";
+
+/* ---------- category / head ---------- */
+const catLink = $(".entry-categories a", entry);
+const ck = catLink ? catKey(catLink.textContent.trim()) : "ai";
+document.body.classList.add("stl-art", "c-" + ck);
+const head = $(".entry-header", entry);
+const titleA = $(".entry-title a", entry) || $(".entry-title", entry);
+const timeEl = $(".entry-date time", entry);
+const jst = d => new Date(d).toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+const left = el("div", "art-left");
+const meta = el("div", "art-meta");
+const cats = $(".entry-categories", entry);
+if (cats) meta.appendChild(cats);
+left.appendChild(meta);
+left.appendChild($(".entry-title", entry));
+const hs = $$("h3,h4", content).filter(h => h.textContent.trim());
+const chapters = hs.filter(h => h.tagName === "H3").length;
+const chars = content.textContent.replace(/\s/g, "").length;
+const facts = el("dl", "stl-facts",
+  `<div><dt>公開</dt><dd>${timeEl ? jst(timeEl.getAttribute("datetime")) : "—"}</dd></div>` +
+  `<div><dt>読む時間</dt><dd>${Math.max(1, Math.round(chars / 500))} 分</dd></div>` +
+  (chapters ? `<div><dt>章</dt><dd>${String(chapters).padStart(2, "0")}</dd></div>` : ""));
+left.appendChild(facts);
+head.prepend(left);
+
+/* first image of the body → the photo of the head */
+let heroImg = null;
+const first = content.firstElementChild;
+if (first && first.tagName === "P" && first.children.length === 1 && first.textContent.trim() === "") {
+  const im = first.querySelector("img");
+  if (im) { heroImg = im; first.remove(); }
+}
+if (heroImg) {
+  heroImg.loading = "eager";
+  const ph = el("figure", "stl-photo stl-pxw");
+  ph.appendChild(heroImg);
+  head.appendChild(ph);
+  pixelate(ph, heroImg, { auto: 350 });
+} else head.classList.add("no-photo");
+
+/* ---------- pixel → photo ----------
+   はてなの画像CDNは CORS を返さないので、画素は読まずに drawImage だけで粗くする */
+function pixelate(box, img, { auto = 0 } = {}) {
+  if (REDUCE) return;
+  const c = el("canvas", "stl-pxc"), x = c.getContext("2d"), t = document.createElement("canvas"), tx = t.getContext("2d");
+  box.classList.add("stl-pxw"); box.appendChild(c);
+  const STEPS = [18, 12, 8, 5, 3, 2];
+  let size = STEPS[0], ready = false, done = false;
+  function draw() {
+    if (!ready || done) return;
+    const r = box.getBoundingClientRect(), w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+    const iw = img.naturalWidth, ih = img.naturalHeight, s = Math.max(w / iw, h / ih), sw = w / s, sh = h / s, sx = (iw - sw) / 2, sy = (ih - sh) / 2;
+    const tw = Math.max(2, Math.round(w / size)), th = Math.max(2, Math.round(h / size));
+    t.width = tw; t.height = th; tx.imageSmoothingEnabled = true; tx.drawImage(img, sx, sy, sw, sh, 0, 0, tw, th);
+    const k = (size - 1) / (STEPS[0] - 1);
+    x.imageSmoothingEnabled = false; x.clearRect(0, 0, w, h);
+    x.filter = `brightness(${1 - .4 * k}) saturate(${1 - .25 * k})`; x.drawImage(t, 0, 0, w, h); x.filter = "none";
+  }
+  function resolve() {
+    let i = 0;
+    const id = setInterval(() => { i++; if (i >= STEPS.length) { clearInterval(id); done = true; c.remove(); return; } size = STEPS[i]; draw(); }, 83); // 12 fps
+  }
+  const onReady = () => { ready = true; draw();
+    if (auto) setTimeout(resolve, auto);
+    else { const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { io.disconnect(); setTimeout(resolve, 120); } }, { threshold: .4 }); io.observe(box); } };
+  if (img.complete && img.naturalWidth) onReady();
+  else { img.addEventListener("load", onReady, { once: true }); img.addEventListener("error", () => c.remove(), { once: true }); }
+  new ResizeObserver(draw).observe(box);
+}
+$$("img.hatena-fotolife", content).forEach(im => {
+  const host = im.parentElement.tagName === "A" ? im.parentElement : im;
+  const wrap = el("span", "stl-pxw"); wrap.style.width = "fit-content"; wrap.style.maxWidth = "100%";
+  host.replaceWith(wrap); wrap.appendChild(host); pixelate(wrap, im);
+});
+
+/* ---------- body grid + route map ---------- */
+const body = el("div", "stl-artbody");
+content.before(body);
+const footer = $(".entry-footer", entry);
+const useRoute = hs.length >= 2;
+let route, rol, fill, nowbar, nowlist, nowN, nowT, nowBar, items = [], mitems = [];
+if (useRoute) {
+  route = el("nav", "stl-route", `<div class="lab"><span>Route</span><span>${String(chapters || hs.length).padStart(2, "0")} stops</span></div><div class="rail"><ol></ol><span class="fill"></span></div>`);
+  route.setAttribute("aria-label", "目次");
+  rol = $("ol", route); fill = $(".fill", route);
+  nowbar = el("div", "stl-nowbar", `<button type="button" aria-expanded="false"><span class="n">00</span><span class="t"></span><span aria-hidden="true">▾</span></button><ol hidden></ol><span class="bar"></span>`);
+  nowlist = $("ol", nowbar); nowN = $(".n", nowbar); nowT = $(".t", nowbar); nowBar = $(".bar", nowbar);
+  let ch = 0;
+  hs.forEach((h, i) => {
+    if (!h.id) h.id = "stl-s" + (i + 1);
+    const label = h.textContent.trim();
+    let num = "";
+    if (h.tagName === "H3") { ch++; num = String(ch).padStart(2, "0"); h.prepend(el("span", "stl-n", num)); }
+    const li = el("li", h.tagName === "H4" ? "sub" : "");
+    const a = el("a"); a.href = "#" + h.id; a.innerHTML = (num ? `<span class="n">${num}</span>` : "") + esc(label); li.appendChild(a);
+    rol.appendChild(li); items.push(li);
+    const ml = el("li", h.tagName === "H4" ? "sub" : ""); const ma = el("a"); ma.href = "#" + h.id; ma.textContent = (num ? num + "　" : "") + label; ml.appendChild(ma);
+    nowlist.appendChild(ml); mitems.push(ml);
+    h._num = num; h._label = label;
+  });
+  body.append(route);
+  entry.querySelector(".entry-inner").insertBefore(nowbar, body);
+  const btn = $("button", nowbar);
+  btn.addEventListener("click", () => { const o = nowlist.hidden; nowlist.hidden = !o; btn.setAttribute("aria-expanded", String(o)); });
+  nowlist.addEventListener("click", e => { if (e.target.closest("a")) { nowlist.hidden = true; btn.setAttribute("aria-expanded", "false"); } });
+} else body.classList.add("no-route");
+body.append(content);
+if (footer) body.append(footer);
+
+function updRoute() {
+  if (!useRoute) return;
+  const y = innerHeight * .3; let cur = 0;
+  hs.forEach((h, i) => { if (h.getBoundingClientRect().top < y) cur = i; });
+  items.forEach((li, i) => { li.classList.toggle("now", i === cur); li.classList.toggle("done", i < cur); });
+  mitems.forEach((li, i) => li.classList.toggle("now", i === cur));
+  const a = items[cur].getBoundingClientRect(), o = rol.getBoundingClientRect(), r = content.getBoundingClientRect(), sec = hs[cur].getBoundingClientRect();
+  const nxt = hs[cur + 1] ? hs[cur + 1].getBoundingClientRect().top : r.bottom;
+  const f = Math.max(0, Math.min(1, (y - sec.top) / Math.max(1, nxt - sec.top)));
+  const b = items[cur + 1] ? items[cur + 1].getBoundingClientRect().top : o.bottom;
+  if (route.offsetParent) fill.style.height = Math.max(0, a.top - o.top + 6 + (b - a.top) * f) + "px";
+  let h3 = cur; while (h3 > 0 && hs[h3].tagName !== "H3") h3--;
+  nowN.textContent = hs[h3]._num || "00"; nowT.textContent = hs[cur]._label;
+  nowBar.style.width = (Math.max(0, Math.min(1, (y - r.top) / r.height)) * 100).toFixed(1) + "%";
+}
+if (useRoute) {
+  let raf = 0; const req = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; updRoute(); }); };
+  addEventListener("scroll", req, { passive: true }); addEventListener("resize", req); updRoute();
+  // keep the "now" station visible inside a long route
+  addEventListener("scroll", () => { const n = $("li.now", rol); if (n && route.scrollHeight > route.clientHeight) { const rr = route.getBoundingClientRect(), nr = n.getBoundingClientRect(); if (nr.top < rr.top + 40 || nr.bottom > rr.bottom - 40) route.scrollTop += nr.top - rr.top - rr.height / 2; } }, { passive: true });
+}
+
+/* ---------- title decodes once, stepped like a terminal ---------- */
+(function decode(node) {
+  if (REDUCE || !node) return;
+  const full = node.textContent; let i = 0;
+  const GL = "ｱｲｳｴｵｶｷｸｹｺ01#%*+=<>/\\";
+  node.setAttribute("aria-label", full);
+  const id = setInterval(() => {
+    i += 2;
+    node.textContent = full.slice(0, i) + [...full.slice(i, i + 6)].map(c => c === " " ? " " : GL[Math.floor(Math.random() * GL.length)]).join("");
+    if (i >= full.length) { node.textContent = full; node.removeAttribute("aria-label"); clearInterval(id); }
+  }, 55);
+})(titleA);
+
+/* ---------- next stop（ひとつ前に書いた記事） ---------- */
+const pn = $(".pager-permalink .pager-next a");
+if (pn) {
+  const url = pn.href;
+  const t = (pn.querySelector(".pager-title") || pn).textContent.replace(/^[\s<>«»]+|[\s<>«»]+$/g, "").trim();
+  const sec = el("section", "stl-next no-photo");
+  sec.setAttribute("aria-label", "次の記事");
+  sec.innerHTML = `<a href="${esc(url)}"><span><span class="lab">Next stop</span><span class="stl-tag" hidden></span><h2>${esc(t)}</h2><span class="go">読む<i></i></span></span></a>`;
+  entry.after(sec);
+  fetch("/feed").then(r => r.ok ? r.text() : "").then(xml => {
+    if (!xml) return;
+    const d = new DOMParser().parseFromString(xml, "application/xml");
+    const e = [...d.getElementsByTagName("entry")].find(e => [...e.getElementsByTagName("link")].some(l => !l.getAttribute("rel") && l.getAttribute("href") === url));
+    if (!e) return;
+    const cat = e.getElementsByTagName("category")[0], enc = [...e.getElementsByTagName("link")].find(l => l.getAttribute("rel") === "enclosure");
+    const title = e.getElementsByTagName("title")[0];
+    if (title) $("h2", sec).textContent = title.textContent;
+    if (cat) { const tg = $(".stl-tag", sec); tg.textContent = cat.getAttribute("term"); tg.hidden = false; sec.classList.add("c-" + catKey(cat.getAttribute("term"))); }
+    if (enc) {
+      const ph = el("span", "stl-photo"); const im = new Image(); im.alt = ""; im.decoding = "async"; im.src = enc.getAttribute("href");
+      ph.appendChild(im); $("a", sec).appendChild(ph); sec.classList.remove("no-photo");
+      pixelate(ph, im);
+    }
+  }).catch(() => {});
+}
 })();

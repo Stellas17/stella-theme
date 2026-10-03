@@ -4,7 +4,7 @@
 l.href='https://fonts.googleapis.com/css2?family=DotGothic16&family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap';document.head.appendChild(l)}
 /* article pages: the city becomes a short band so the title is on the first screen; the sidebar keeps only profile, search and archive */
 const st=document.createElement('style');st.dataset.stella='global';st.textContent=
-'body.page-entry .stl-hero{height:clamp(190px,16vw,250px)}body.page-entry .stl-brand{top:16px}body.page-entry .stl-hud{display:none}'+
+'body.page-entry .stl-hero{height:clamp(190px,16vw,250px)}body.page-entry .stl-brand{top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-end}body.page-entry .stl-hud{display:none}'+
 '.hatena-module-recent-entries,.hatena-module-links{display:none!important}';document.head.appendChild(st)})();
 /* Stella Night — ヘッダ：屋上から星を見上げる／フッタ：路地に降りて看板を見る（どちらも AI 生成の一枚絵を 32 色のドット絵に直し、光と動きを足したもの） */
 (() => {
@@ -473,7 +473,7 @@ function ImageLogo(a){
       :[[rr(.6,1.5),OFF],...strike(true)]
   ];
   // the full power-on plays once per visit, on the top page; elsewhere the sign is already lit
-  const QUICK=!document.body.classList.contains("page-index")||(()=>{try{return sessionStorage.getItem("stl-lit")}catch(e){return null}})();
+  const QUICK=true;   // no power-on: the sign is shown lit at once (the design CSS already paints the same image before this script loads)
   function schedule(t){
     now=t;if(!parts)return;
     if(boot===null&&QUICK){boot=t;T.forEach((tb,k)=>{tb.v=1;tb.c=0;tb.segs=[];tb.busy=t;tb.next=t+rr(4,MEAN[k])})}   // already seen the power-on: start lit
@@ -532,6 +532,7 @@ function ImageLogo(a){
   }
   function draw(){
     if(!parts||!dirty)return;dirty=false;
+    if(!a.classList.contains("stl-lit")&&T.every(tb=>tb.v>.98))a.classList.add("stl-lit");   // the canvas takes over from the static image
     x.clearRect(0,0,c.width,c.height);x.globalCompositeOperation="lighter";
     for(const tb of T){
       const v=Math.max(OFF,Math.min(1.1,tb.v)),u=Math.min(1,v);

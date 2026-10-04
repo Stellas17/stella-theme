@@ -20,7 +20,7 @@ const st=document.createElement('style');st.dataset.stella='global';st.textConte
 '@keyframes stl-glint{0%,100%{opacity:0;transform:scale(.4)}40%{opacity:1;transform:scale(1.15)}70%{opacity:.6;transform:scale(.8)}}'+
 '@media (prefers-reduced-motion:reduce){.egg-spot::after{animation:none}}'+
 /* phones: on the short article band the tagline would be too small to read, so the logo stands alone */
-'@media (max-width:560px){:is(body.page-entry,body.page-archive,body.page-about) .stl-tag{display:none}}'+
+'@media (max-width:560px){:is(body.page-entry,body.page-archive,body.page-about) .stl-hero .stl-tag{display:none}}'+
 /* Hatena's white widgets, recoloured for the night: the add-star button and the sidebar "subscribe" button */
 '[data-hatena-star]::part(star-button-container){filter:invert(1) hue-rotate(180deg) brightness(.85)}'+
 '#box2 .hatena-follow-button{background:none!important;border:1px solid var(--line)!important;border-radius:0!important;color:#c9cce8!important;font-family:var(--f-body)!important;font-size:14px!important;letter-spacing:.04em;line-height:1.4!important;padding:11px 18px!important;box-shadow:none!important;text-shadow:none!important;display:inline-flex!important;align-items:center;height:auto!important;width:auto!important}'+
@@ -768,19 +768,29 @@ const css = `
 .stl-nowbar ol li.sub a{padding-left:16px;font-size:14px}
 .stl-nowbar ol li.now a{color:var(--white)}
 /* next stop */
+/* next stop: the same row as the article lists (category, date, title, two lines, photo on the right) */
 .stl-next{max-width:76rem;margin:0 auto 80px;padding-inline:0}
-.stl-next a{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,4vw,56px);align-items:center;text-decoration:none;color:inherit;border-top:1px solid var(--line);padding-top:40px}
-.stl-next.no-photo a{grid-template-columns:1fr}
 .stl-next .lab{display:block;margin-bottom:12px;font-family:var(--f-pixel);font-size:11.5px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase}
-.stl-next h2{margin:.4em 0 0;font-size:clamp(22px,3vw,32px);line-height:1.45;font-weight:700;color:var(--white);text-wrap:balance}
-.stl-next .go{display:inline-flex;gap:10px;align-items:center;margin-top:18px;font-family:var(--f-pixel);font-size:12.5px;letter-spacing:.16em;color:var(--c)}
-.stl-next .go i{display:block;width:28px;height:2px;background:var(--c);transition:width .2s var(--step)}
-.stl-next a:hover .go i{width:52px}
-.stl-next .stl-photo{aspect-ratio:16/9}
+.stl-next a{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:clamp(14px,3vw,32px);align-items:center;padding-block:22px;border-block:1px solid var(--line);text-decoration:none;color:inherit}
+.stl-next.no-photo a{grid-template-columns:1fr}
+.stl-next a::before{content:"";position:absolute;left:-16px;top:22px;bottom:22px;width:2px;background:var(--c);transform:scaleY(0);transform-origin:top;transition:transform .25s var(--step);box-shadow:0 0 12px var(--c)}
+.stl-next a:hover::before,.stl-next a:focus-visible::before{transform:none}
+.stl-next .meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.stl-next h2{margin:.4em 0 .35em;font-size:clamp(17px,2vw,20px);line-height:1.6;font-weight:700;color:var(--text);text-wrap:balance;border:0;padding:0;transition:color .2s var(--step)}
+.stl-next a:hover h2,.stl-next a:focus-visible h2{color:var(--white)}
+.stl-next .desc{margin:0;font-size:14px;line-height:1.8;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.stl-next .stl-photo{aspect-ratio:3/2}
+.stl-next .stl-photo::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);pointer-events:none;z-index:2}
+.stl-next .stl-vf{position:absolute;inset:10px;pointer-events:none;z-index:3;opacity:0;transition:opacity .12s ease}
+.stl-next .stl-vf::before,.stl-next .stl-vf::after{content:"";position:absolute;width:4px;height:4px;background:var(--c);box-shadow:0 0 0 var(--c),0 0 0 var(--c);transition:box-shadow .26s cubic-bezier(.2,.7,.2,1) .1s}
+.stl-next .stl-vf::before{left:0;top:0}.stl-next .stl-vf::after{right:0;bottom:0}
+.stl-next a:hover .stl-vf,.stl-next a:focus-visible .stl-vf{opacity:1}
+.stl-next a:hover .stl-vf::before,.stl-next a:focus-visible .stl-vf::before{box-shadow:8px 0 0 var(--c),0 8px 0 var(--c)}
+.stl-next a:hover .stl-vf::after,.stl-next a:focus-visible .stl-vf::after{box-shadow:-8px 0 0 var(--c),0 -8px 0 var(--c)}
 .stl-art .pager-permalink{display:none}
 .stl-artbody>.stl-next{grid-column:2;max-width:none;margin:72px 0 0}
 .stl-artbody.no-route>.stl-next{grid-column:1}
-.stl-artbody>.stl-next a{padding-top:32px}
+.stl-artbody>.stl-next+.entry-footer{border-top:0;margin-top:28px;padding-top:0}
 /* end of the article: author, stars and share in one quiet row; Hatena's ad framed like the in-article one; comments last */
 .stl-art .entry-footer{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;margin-top:48px}
 .stl-art .entry-footer>*{margin:0!important}
@@ -808,10 +818,10 @@ const css = `
   .stl-artbody,.stl-artbody.no-route{grid-template-columns:minmax(0,40rem);justify-content:center;padding-top:32px}
   .stl-artbody>.entry-content,.stl-artbody>.entry-footer{grid-column:1}
   .stl-route{display:none}.stl-nowbar{display:block}
-  .stl-next a{grid-template-columns:1fr}.stl-next .stl-photo{order:-1}
+  .stl-next a{grid-template-columns:minmax(0,1fr) 112px}.stl-next .desc{display:none}.stl-next a::before{left:-10px}
   .stl-artbody>.stl-next{grid-column:1}
 }
-@media (prefers-reduced-motion:reduce){.stl-route .fill,.stl-route li a,.stl-next .go i{transition:none}}
+@media (prefers-reduced-motion:reduce){.stl-route .fill,.stl-route li a,.stl-next a::before,.stl-next h2,.stl-next .stl-vf,.stl-next .stl-vf::before,.stl-next .stl-vf::after{transition:none}}
 `;
 document.head.appendChild(el("style", null, css)).dataset.stella = "article";
 
@@ -985,7 +995,7 @@ if (pn) {
   const t = (pn.querySelector(".pager-title") || pn).textContent.replace(/^[\s<>«»]+|[\s<>«»]+$/g, "").trim();
   const sec = el("section", "stl-next no-photo");
   sec.setAttribute("aria-label", "次の記事");
-  sec.innerHTML = `<a href="${esc(url)}"><span><span class="lab">Next stop</span><span class="stl-tag" hidden></span><h2>${esc(t)}</h2><span class="go">読む<i></i></span></span></a>`;
+  sec.innerHTML = `<span class="lab">Next stop</span><a href="${esc(url)}"><span style="min-width:0"><span class="meta"><span class="stl-tag" hidden></span><time hidden></time></span><h2>${esc(t)}</h2><p class="desc" hidden></p></span></a>`;
   content.after(sec);   // straight after the text, before stars / share / comments
   fetch("/feed").then(r => r.ok ? r.text() : "").then(xml => {
     if (!xml) return;
@@ -996,9 +1006,16 @@ if (pn) {
     const title = e.getElementsByTagName("title")[0];
     if (title) $("h2", sec).textContent = title.textContent;
     if (cat) { const tg = $(".stl-tag", sec); tg.textContent = cat.getAttribute("term"); tg.hidden = false; sec.classList.add("c-" + catKey(cat.getAttribute("term"))); }
+    const pub = e.getElementsByTagName("published")[0];
+    if (pub) { const tm = $("time", sec), dd = jst(pub.textContent); tm.textContent = dd; tm.setAttribute("datetime", dd); tm.hidden = false; }
+    // two lines of the post: the feed summary, or its text without embedded figure code
+    const sm = e.getElementsByTagName("summary")[0], ct = e.getElementsByTagName("content")[0];
+    let ds = sm ? sm.textContent.replace(/\s+/g, " ").trim() : "";
+    if (!ds || /[{};]\s*[\w-]+\s*:|function\s*\(|\.stl-[ab]\b/.test(ds.slice(0, 160))) { if (ct) { const cd = new DOMParser().parseFromString(ct.textContent, "text/html"); cd.querySelectorAll("script,style,noscript").forEach(n => n.remove()); ds = cd.body.textContent.replace(/\s+/g, " ").trim(); } else ds = ""; }
+    if (ds) { const p = $(".desc", sec); p.textContent = ds.slice(0, 120); p.hidden = false; }
     if (enc && /\/fotolife\/|f\.st-hatena\.com/.test(enc.getAttribute("href"))) {   // only the author's photo, never Hatena's default OGP image
-      const ph = el("span", "stl-photo"); const im = new Image(); im.alt = ""; im.decoding = "async"; im.src = enc.getAttribute("href");
-      ph.appendChild(im); $("a", sec).appendChild(ph); sec.classList.remove("no-photo");
+      const ph = el("span", "stl-photo", '<span class="stl-vf"></span>'); const im = new Image(); im.alt = ""; im.decoding = "async"; im.src = enc.getAttribute("href");
+      ph.prepend(im); $("a", sec).appendChild(ph); sec.classList.remove("no-photo");
       pixelate(ph, im);
     }
   }).catch(() => {});

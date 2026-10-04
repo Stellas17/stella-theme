@@ -7,7 +7,7 @@ const st=document.createElement('style');st.dataset.stella='global';st.textConte
 ':is(body.page-entry,body.page-archive,body.page-about) .stl-hero{height:clamp(190px,16vw,250px)}:is(body.page-entry,body.page-archive,body.page-about) .stl-brand{top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-end}:is(body.page-entry,body.page-archive,body.page-about) .stl-hud{display:none}'+
 '.hatena-module-recent-entries,.hatena-module-links{display:none!important}'+
 /* the city fades in over the still picture painted by the design CSS (or over the night gradient if that is not set) */
-'.stl-hero .stl-lens{opacity:0;transition:opacity .5s steps(6,end);image-rendering:auto}.stl-hero.stl-ready .stl-lens{opacity:1}'+
+'.stl-hero .stl-lens{opacity:0;transition:opacity .6s ease;image-rendering:auto}.stl-hero.stl-ready .stl-lens{opacity:1}'+
 /* article pages: keep the logo and tagline above the menu */
 ':is(body.page-entry,body.page-archive,body.page-about) .stl-brand{bottom:48px}@media (max-width:560px){:is(body.page-entry,body.page-archive,body.page-about) .stl-brand{bottom:40px}}'+
 /* narrow screens: the logo sits over bright towers, so deepen the night behind the tagline */
@@ -679,7 +679,7 @@ const catKey = name => CAT[name] || "ai";
 
 /* ---------- CSS（デザインCSS 欄を増やさないよう、ここで入れる） ---------- */
 const css = `
-:root{--line2:#3a3460;--dim:#8b8fbb;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
+:root{--line2:#3a3460;--dim:#8b8fbb;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:cubic-bezier(.2,.7,.2,1)}
 .c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
 .stl-art article.entry{max-width:76rem;margin-inline:auto}
 .stl-art .entry-inner{display:block}
@@ -866,7 +866,7 @@ function pixelate(box, img, { auto = 0 } = {}) {
   if (REDUCE || (cc && cc.classList.contains("c-photo"))) return;
   const c = el("canvas", "stl-pxc"), x = c.getContext("2d"), t = document.createElement("canvas"), tx = t.getContext("2d");
   box.classList.add("stl-pxw"); box.appendChild(c);
-  const STEPS = [18, 12, 8, 5, 3, 2];
+  const STEPS = [18, 15, 12, 10, 8, 6, 5, 4, 3, 2];
   let size = STEPS[0], ready = false, done = false;
   function draw() {
     if (!ready || done) return;
@@ -881,7 +881,7 @@ function pixelate(box, img, { auto = 0 } = {}) {
   }
   function resolve() {
     let i = 0;
-    const id = setInterval(() => { i++; if (i >= STEPS.length) { clearInterval(id); done = true; c.remove(); return; } size = STEPS[i]; draw(); }, 83); // 12 fps
+    const id = setInterval(() => { i++; if (i >= STEPS.length) { clearInterval(id); done = true; c.style.transition = "opacity .25s ease"; c.style.opacity = "0"; setTimeout(() => c.remove(), 260); return; } size = STEPS[i]; draw(); }, 45);   // smooth: small steps, then fade into the photo
   }
   const onReady = () => { ready = true; draw();
     if (auto) setTimeout(resolve, auto);
@@ -968,11 +968,14 @@ if (useRoute) {
   const full = node.textContent; let i = 0;
   const GL = "ｱｲｳｴｵｶｷｸｹｺ01#%*+=<>/\\";
   node.setAttribute("aria-label", full);
-  const id = setInterval(() => {
-    i += 2;
-    node.textContent = full.slice(0, i) + [...full.slice(i, i + 6)].map(c => c === " " ? " " : GL[Math.floor(Math.random() * GL.length)]).join("");
-    if (i >= full.length) { node.textContent = full; node.removeAttribute("aria-label"); clearInterval(id); }
-  }, 55);
+  const chars = [...full], dur = Math.min(2000, Math.max(900, chars.length * 55)), t0 = performance.now(); let lastScr = 0;
+  (function tick(now) {
+    i = Math.floor(Math.min(1, (now - t0) / dur) * chars.length);
+    if (now - lastScr > 60 || i >= chars.length) { lastScr = now;   // the scrambled tail changes about 16 times a second
+      node.textContent = chars.slice(0, i).join("") + chars.slice(i, i + 6).map(c => c === " " ? " " : GL[Math.floor(Math.random() * GL.length)]).join(""); }
+    if (i >= chars.length) { node.textContent = full; node.removeAttribute("aria-label"); return; }
+    requestAnimationFrame(tick);
+  })(t0);
 })(titleA);
 
 /* ---------- next stop（ひとつ前に書いた記事） ---------- */
@@ -1022,7 +1025,7 @@ const keyOf = name => KEYS.find(k => CAT[k][0] === name) || "ai";
 const jst = d => d.toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
 
 const css = `
-:root{--line2:#3a3460;--dim:#8b8fbb;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
+:root{--line2:#3a3460;--dim:#8b8fbb;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:cubic-bezier(.2,.7,.2,1)}
 .c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
 body.stl-top #main-inner>article.entry,body.stl-top #main-inner>.pager{display:none}
 .stl-tp{max-width:76rem;margin:0 auto}
@@ -1062,7 +1065,7 @@ body.stl-top #main-inner>article.entry,body.stl-top #main-inner>.pager{display:n
 .stl-pick .ix{min-width:4.6em;text-align:center;font-size:12px;color:var(--dim)}
 .stl-tp .stl-pick .go{margin:0 0 0 10px;height:44px;box-sizing:border-box;padding:0 18px;border:1px solid var(--c);text-decoration:none}
 .stl-pick .go:hover i{width:44px}
-.stl-pick.swap .in{animation:stl-pk .3s steps(4,end)}
+.stl-pick.swap .in{animation:stl-pk .32s cubic-bezier(.2,.7,.2,1)}
 @keyframes stl-pk{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
 .stl-legend span:nth-child(2){font-family:var(--f-body);font-size:13px}
 .stl-legend{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between;padding-block:12px 0;font-size:12px;color:var(--dim)}
@@ -1078,8 +1081,8 @@ body.stl-top #main-inner>article.entry,body.stl-top #main-inner>.pager{display:n
 .stl-pix canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
 .stl-pix::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);pointer-events:none}
 /* photo frame: on focus one dot in each corner splits into three and becomes the bracket */
-.stl-vf{position:absolute;inset:10px;pointer-events:none;z-index:1;opacity:0;transition:opacity .08s steps(1,end)}
-.stl-vf::before,.stl-vf::after{content:"";position:absolute;width:4px;height:4px;background:var(--c);box-shadow:0 0 0 var(--c),0 0 0 var(--c);transition:box-shadow .24s steps(3,end) .12s}
+.stl-vf{position:absolute;inset:10px;pointer-events:none;z-index:1;opacity:0;transition:opacity .12s ease}
+.stl-vf::before,.stl-vf::after{content:"";position:absolute;width:4px;height:4px;background:var(--c);box-shadow:0 0 0 var(--c),0 0 0 var(--c);transition:box-shadow .26s cubic-bezier(.2,.7,.2,1) .1s}
 .stl-vf::before{left:0;top:0}.stl-vf::after{right:0;bottom:0}
 .stl-tp a:hover .stl-vf,.stl-tp a:focus-visible .stl-vf,.stl-pix.is-focus .stl-vf{opacity:1}
 .stl-tp a:hover .stl-vf::before,.stl-tp a:focus-visible .stl-vf::before,.stl-pix.is-focus .stl-vf::before{box-shadow:8px 0 0 var(--c),0 8px 0 var(--c)}
@@ -1153,7 +1156,7 @@ function PixPhoto(box, src, owner, { auto = false } = {}) {
   }
   function go(to) {
     target = to; if (REDUCE) { size = to; draw(); return; } if (timer) return;
-    timer = setInterval(() => { size += target > size ? Math.max(1, Math.round((target - size) / 2)) : -Math.max(1, Math.round((size - target) / 2)); if (Math.abs(size - target) < 1) { size = target; clearInterval(timer); timer = null; } draw(); }, 83);
+    timer = setInterval(() => { size += target > size ? 1 : -1; if (Math.abs(size - target) < 1) { size = target; clearInterval(timer); timer = null; } draw(); }, 40);
   }
   if (!src) { c.remove(); box.classList.add("none"); return; }
   const im = new Image(); im.decoding = "async"; im.onload = () => { img = im; fit(); if (auto || REDUCE) setTimeout(() => go(1), 500); }; im.src = src;
@@ -1250,8 +1253,8 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
       const on = !filter || filter === p.k, hv = i === sel || i === hover, col = CAT[p.k][1], tw = .75 + .25 * Math.sin(step * 1.7 + i * 1.3);
       if (drawT === null && !REDUCE) return;
       const g = GATHER ? Math.min(1, Math.max(0, (since - .15 - ((i * .618) % 1) * .48) / .9)) : 1;
-      if (g < 1) {   // in flight: a small dot on its way, snapped to 2 px
-        const fx = Math.round((n0.x + (p.x - n0.x) * ease(g)) / 2) * 2, fy = Math.round((n0.y + (p.y - n0.y) * ease(g)) / 2) * 2;
+      if (g < 1) {   // in flight: a small dot on its way
+        const fx = Math.round(n0.x + (p.x - n0.x) * ease(g)), fy = Math.round(n0.y + (p.y - n0.y) * ease(g));
         if (g > 0) { sx.fillStyle = col; sx.globalAlpha = on ? .9 : .3; sx.fillRect(fx - 1, fy - 1, 3, 3); sx.globalAlpha = 1; }
         return;
       }
@@ -1313,7 +1316,7 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
   new IntersectionObserver(es => { vis = es[0].isIntersecting; if (vis && drawT === null) drawT = performance.now() / 1000; }, { threshold: .2 }).observe(sky);
   layout(); let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { layout(); draw(performance.now() / 1000); }, 150); });
   if (REDUCE) draw(0);
-  else { let last = 0; (function loop(ms) { requestAnimationFrame(loop); if (!vis || ms - last < 83) return; last = ms; draw(ms / 1000); })(0); }
+  else { let last = 0; (function loop(ms) { requestAnimationFrame(loop); const intro = drawT !== null && ms / 1000 - drawT < 3.3; if (!vis || (!intro && ms - last < 83)) return; last = ms; draw(ms / 1000); })(0); }
 }).catch(restore);
 })();
 
@@ -1335,7 +1338,7 @@ const KEYS = Object.keys(CAT);
 const keyOf = name => KEYS.find(k => CAT[k][0] === name) || "ai";
 
 const css = `
-:root{--line2:#3a3460;--dim:#8b8fbb;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
+:root{--line2:#3a3460;--dim:#8b8fbb;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:cubic-bezier(.2,.7,.2,1)}
 .c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
 body.stl-arc #main-inner>.archive-header-category,body.stl-arc #main-inner>.archive-entries-sort,body.stl-arc .archive-entries>section{display:none}
 .stl-ar{max-width:76rem;margin:0 auto}
@@ -1369,8 +1372,8 @@ body.stl-arc #main-inner>.archive-header-category,body.stl-arc #main-inner>.arch
 .stl-ar .stl-pix{position:relative;display:block;aspect-ratio:3/2;max-width:100%;overflow:hidden;background:var(--surface)}
 .stl-ar .stl-pix canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
 .stl-ar .stl-pix::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);pointer-events:none}
-.stl-ar .stl-vf{position:absolute;inset:10px;pointer-events:none;z-index:1;opacity:0;transition:opacity .08s steps(1,end)}
-.stl-ar .stl-vf::before,.stl-ar .stl-vf::after{content:"";position:absolute;width:4px;height:4px;background:var(--c);box-shadow:0 0 0 var(--c),0 0 0 var(--c);transition:box-shadow .24s steps(3,end) .12s}
+.stl-ar .stl-vf{position:absolute;inset:10px;pointer-events:none;z-index:1;opacity:0;transition:opacity .12s ease}
+.stl-ar .stl-vf::before,.stl-ar .stl-vf::after{content:"";position:absolute;width:4px;height:4px;background:var(--c);box-shadow:0 0 0 var(--c),0 0 0 var(--c);transition:box-shadow .26s cubic-bezier(.2,.7,.2,1) .1s}
 .stl-ar .stl-vf::before{left:0;top:0}.stl-ar .stl-vf::after{right:0;bottom:0}
 .stl-ar a:hover .stl-vf,.stl-ar a:focus-visible .stl-vf,.stl-ar .stl-pix.is-focus .stl-vf{opacity:1}
 .stl-ar a:hover .stl-vf::before,.stl-ar a:focus-visible .stl-vf::before,.stl-ar .stl-pix.is-focus .stl-vf::before{box-shadow:8px 0 0 var(--c),0 8px 0 var(--c)}
@@ -1429,7 +1432,7 @@ function PixPhoto(box, src, owner) {
   }
   function go(to) {
     target = to; if (REDUCE) { size = to; draw(); return; } if (timer) return;
-    timer = setInterval(() => { size += target > size ? Math.max(1, Math.round((target - size) / 2)) : -Math.max(1, Math.round((size - target) / 2)); if (Math.abs(size - target) < 1) { size = target; clearInterval(timer); timer = null; } draw(); }, 83);
+    timer = setInterval(() => { size += target > size ? 1 : -1; if (Math.abs(size - target) < 1) { size = target; clearInterval(timer); timer = null; } draw(); }, 40);
   }
   if (!src) { c.remove(); box.classList.add("none"); return; }
   const im = new Image(); im.decoding = "async"; im.onload = () => { img = im; fit(); if (REDUCE) go(1); }; im.src = src;
@@ -1510,7 +1513,7 @@ const nick = nickEl ? nickEl.textContent.trim() : "Stella";
 const prof = dl && $('a[href*="profile.hatena.ne.jp"]', dl), idEl = dl && $(".user-name-hatena-id", dl);
 
 const css = `
-:root{--line2:#3a3460;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:steps(6,end)}
+:root{--line2:#3a3460;--white:#f6f2ff;--amber:#ffb347;--lav:#b48cff;--peach:#ffd896;--mag:#ff4fa8;--step:cubic-bezier(.2,.7,.2,1)}
 .c-ai{--c:var(--cyan)}.c-work{--c:var(--amber)}.c-make{--c:var(--mag)}.c-run{--c:var(--peach)}.c-photo{--c:var(--lav)}
 body.stl-abt #main-inner>article.entry{display:none}
 .stl-ab{max-width:76rem;margin:0 auto}
@@ -1598,7 +1601,7 @@ B.classList.add("stl-abt");
       const t = (now - t0) / 1000; x.clearRect(0, 0, S, S); let done = true;
       for (const p of tiles) {
         const k = Math.min(1, Math.max(0, (t - .2 - p.d) / .9)), e = ease(k); if (k < 1) done = false;
-        const px = Math.round((p.sx + (p.gx * tile - p.sx) * e) * dpr / 2) * 2 / dpr, py = Math.round((p.sy + (p.gy * tile - p.sy) * e) * dpr / 2) * 2 / dpr;
+        const px = Math.round((p.sx + (p.gx * tile - p.sx) * e) * dpr) / dpr, py = Math.round((p.sy + (p.gy * tile - p.sy) * e) * dpr) / dpr;
         if (k < .5) { x.globalAlpha = 1; x.fillStyle = "#bef8ff"; x.fillRect(px, py, Math.max(1, tile * .6), Math.max(1, tile * .6)); }
         x.globalAlpha = Math.min(1, k * 2); x.drawImage(img, p.gx * src, p.gy * src, src, src, px, py, tile + .5, tile + .5);
       }

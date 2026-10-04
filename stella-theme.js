@@ -950,13 +950,13 @@ if (footer) body.append(footer);
 /* Hatena star: on hover its iframe grows upward from the old 24px icon into a balloon (starrers' icons).
    - color-scheme:light on the iframe: the page is dark, so Chrome would paint the light iframe on an opaque white backdrop
    - the icon row sits under our chip; clip it off and place the balloon so the first icon lines up with the chip's
-     left edge, 8px above it (the clipped area still reaches the chip, so the pointer can travel up without a gap) */
+     left edge, 8px above it. Clipping the full 24px row keeps the closed (32×24) state completely hidden */
 (function starFit(n) {
   const h = document.querySelector("[data-hatena-star]"), sr = h && h.shadowRoot;
   if (!sr || !sr.querySelector("[part=star-button-container]")) { if (n < 40) setTimeout(() => starFit(n + 1), 250); return; }
   if (sr.querySelector("style[data-stella]")) return;
   const s = document.createElement("style"); s.dataset.stella = "star";
-  s.textContent = "[part=star-button-container]>iframe{color-scheme:light;bottom:calc(100% - 20px)!important;left:-5px!important;clip-path:inset(0 0 20px 0)}";
+  s.textContent = "[part=star-button-container]>iframe{color-scheme:light;bottom:calc(100% - 20px)!important;left:-5px!important;clip-path:inset(0 0 24px 0)}";
   sr.appendChild(s);
 })(0);
 

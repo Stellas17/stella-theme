@@ -22,7 +22,6 @@ const st=document.createElement('style');st.dataset.stella='global';st.textConte
 /* phones: on the short article band the tagline would be too small to read, so the logo stands alone */
 '@media (max-width:560px){:is(body.page-entry,body.page-archive,body.page-about) .stl-hero .stl-tag{display:none}}'+
 /* Hatena's white widgets, recoloured for the night: the add-star button and the sidebar "subscribe" button */
-'[data-hatena-star]::part(star-button-container){filter:invert(1) hue-rotate(180deg) brightness(.85)}'+
 '#box2 .hatena-follow-button{background:none!important;border:1px solid var(--line)!important;border-radius:0!important;color:#c9cce8!important;font-family:var(--f-body)!important;font-size:14px!important;letter-spacing:.04em;line-height:1.4!important;padding:11px 18px!important;box-shadow:none!important;text-shadow:none!important;display:inline-flex!important;align-items:center;height:auto!important;width:auto!important}'+
 '#box2 .hatena-follow-button,#box2 .hatena-follow-button *{text-decoration:none!important}#box2 .hatena-follow-button:hover{color:var(--cyan)!important;border-color:var(--cyan)!important}'+
 '#box2{max-width:76rem!important;margin:96px auto 0!important}'+
@@ -803,8 +802,12 @@ const css = `
 .stl-art .entry-footer .comment-box{order:5;flex-basis:100%}
 .stl-art .entry-footer .entry-tags-wrapper:not(:has(a)){display:none!important}
 .stl-art .entry-footer .entry-footer-section a{color:var(--muted);text-decoration:none}.stl-art .entry-footer .entry-footer-section a:hover{color:var(--text)}
-.stl-art .entry-footer .hatena-star-container{display:inline-flex;align-items:center;gap:10px;min-height:32px}
-.stl-art .entry-footer .hatena-star-container::before{content:"Star";font-family:var(--f-pixel);font-size:11px;letter-spacing:.24em;color:var(--muted);text-transform:uppercase}
+/* the star button looks like the share buttons: a framed chip with Stella's four-pointed star; Hatena's own icon stays underneath and still takes the click */
+.stl-art .entry-footer .hatena-star-container{display:inline-flex;align-items:center;gap:10px}
+[data-hatena-star]::part(star-button-container){position:relative!important;display:inline-flex!important;align-items:center;width:auto!important;height:auto!important;min-height:38px;margin:0!important;padding:0 14px 0 36px;box-sizing:border-box;border:1px solid var(--line2);cursor:pointer;vertical-align:middle!important;transition:border-color .2s var(--step),box-shadow .2s var(--step)}
+[data-hatena-star]::part(star-button-container)::before{content:"";position:absolute;inset:0;z-index:1;background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9' shape-rendering='crispEdges'%3E%3Cpath fill='%2346ecff' d='M4 0h1v2h-1zM3 2h3v1h-3zM0 4h2v1h-2zM7 4h2v1h-2zM2 3h5v3h-5zM3 6h3v1h-3zM4 7h1v2h-1z'/%3E%3C/svg%3E") no-repeat 13px 50%/14px 14px}
+[data-hatena-star]::part(star-button-container)::after{content:"スター";position:relative;z-index:2;font-family:var(--f-body);font-size:14px;letter-spacing:.04em;line-height:1.4;color:#c9cce8}
+[data-hatena-star]::part(star-button-container):hover{border-color:var(--cyan);box-shadow:0 0 14px rgba(70,236,255,.18)}
 .stl-art .comment-box{padding-top:24px;border-top:1px solid var(--line)}
 .stl-art .comment-box .comment{list-style:none;margin:0 0 16px;padding:0}
 .stl-art .comment-box .comment>li{margin:0;padding:16px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.8}

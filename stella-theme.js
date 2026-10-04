@@ -166,7 +166,7 @@ void main(){
 
 function ImageHero(cv,gv,dv,SRC){
   const SW=480,SH=206,CHX=140;
-  const ctx=cv.getContext("2d"),gtx=gv.getContext("2d"),dtx=dv.getContext("2d");const SKY=SRC.sky;let dofM=null,MK=null,FX={bokeh:[],star:{x:418,y:19},dofk:.65};
+  const ctx=cv.getContext("2d"),gtx=gv.getContext("2d"),dtx=dv.getContext("2d");const SKY=SRC.sky;let dofM=null,MK=null,FX={bokeh:[],star:{x:419,y:20},dofk:.65};
   const LENS=(()=>{try{return Lens(cv.parentElement)}catch(e){console.warn(e);return null}})();if(LENS)for(const c of [cv,gv,dv])c.style.visibility='hidden';
   const [bc,b]=cnv(SW,SH),[gc,g]=cnv(SW,SH);
   let ready=false,vw=0,vh=0,ox=0,oy=0,scale=3,D,A;
@@ -208,7 +208,7 @@ function ImageHero(cv,gv,dv,SRC){
     for(let y=WATER[1];y<WATER[1]+WATER[3];y++)A.water.push(y);
     A.flick=[{r:[188,50,16,47],per:5.3,off:0,fq:38,th:.1},{r:[232,120,23,15],per:8.9,off:2.7,fq:23,th:-.2},{r:[362,162,16,18],per:13.1,off:6.1,fq:51,th:.4}];
     for(const f of A.flick){const[x,y,w,h]=f.r,[c,cx]=cnv(w,h),id=b.getImageData(x,y,w,h);for(let i=0;i<id.data.length;i+=4){id.data[i]*=.3;id.data[i+1]*=.3;id.data[i+2]*=.38}cx.putImageData(id,0,0);f.dark=c}
-    A.stella={x:418,y:19};
+    A.stella={x:419,y:20};   // centre of the star in the art: its core is the 2×2 block x418–419, y19–20, so the centre sits on the grid line
     {const cand=[];for(let y=0;y<SH;y++)for(let x=0;x<SW;x++){const[r,gg,bb]=at(x,y),l=(r+gg+bb)/3,k=MK?MK[(y*SW+x)*4+3]/255:0;if(l>170&&k>.22&&y>60)cand.push({x,y,k,c:`${r},${gg},${bb}`})}
       cand.sort((a,b)=>b.k-a.k);for(const q of cand){if(FX.bokeh.length>=24)break;if(FX.bokeh.some(b=>Math.hypot(b.x-q.x,b.y-q.y)<9))continue;FX.bokeh.push({x:q.x,y:q.y,r:4+q.k*9,a:.11+q.k*.18,c:q.c,ph:R()*7})}
       for(const[x,y,r,c]of[[18,196,16,"255,180,110"],[60,203,11,"255,200,140"],[472,200,14,"120,200,255"],[440,205,9,"255,110,190"],[6,150,12,"255,170,100"]])FX.bokeh.push({x,y,r,a:.12,c,ph:R()*7})}
@@ -232,7 +232,7 @@ function ImageHero(cv,gv,dv,SRC){
       ctx.fillStyle=L.c;for(let y=Math.max(oy,0);y<L.y;y++)for(let x=Math.max(ox,L.x-150);x<Math.min(ox+vw,L.x+150);x++){if(y>=(x>=290?Math.min(SKY[x],50):SKY[x]))continue;const vx=x-L.x,vy=y-L.y,along=vx*dx+vy*dy;if(along<=0)continue;const perp=Math.abs(vx*dy-vy*dx);if(perp>1+along*hw)continue;
         const a=L.a*(1-along/190)*(perp<along*hw*.45?1:.55);if(a<=.01)continue;ctx.globalAlpha=a;ctx.fillRect(x-ox,y-oy,1,1)}ctx.globalAlpha=1}
     if(FX2.flicker)for(const s of A.stars){const a=.5+.5*Math.sin(t*s.sp+s.ph);if(a<.35)P(ctx,s.x,s.y,[s.c[0]*.35,s.c[1]*.35,s.c[2]*.45])}
-    if(FX2.starglow){const p=FX2.flicker?.55+.45*Math.sin(t*1.2):.8,S2=A.stella;P(gtx,S2.x-2,S2.y-2,"#9ec4ff",.25+.2*p,5,5);P(gtx,S2.x-4,S2.y,"#e8f4ff",.6+.4*p,9,1);P(gtx,S2.x,S2.y-4,"#e8f4ff",.6+.4*p,1,9)}
+    if(FX2.starglow){const p=FX2.flicker?.55+.45*Math.sin(t*1.2):.8,S2=A.stella;P(gtx,S2.x-3,S2.y-3,"#9ec4ff",.25+.2*p,6,6);P(gtx,S2.x-5,S2.y-1,"#e8f4ff",.45+.3*p,10,2);P(gtx,S2.x-1,S2.y-5,"#e8f4ff",.45+.3*p,2,10)}
     // cars on the traced roads (white = toward us, red = away)
     if(FX2.cars)for(const r of ROADS)for(const c of r.cars){c.s=(c.s+c.dir*r.sp*dt+r.L)%r.L;const[x,y,nx,ny]=along(r,c.s),lane=r.oneway?0:(c.dir>0?.7:-.7),col=c.dir>0?"#fff2d6":"#ff5a4a";
       P(ctx,x+nx*lane,y+ny*lane,col,r.a);P(gtx,x+nx*lane-1,y+ny*lane-1,col,.6*r.a,3,3)}
@@ -390,7 +390,7 @@ function AlleyFooter(sec,SRC){
     const NX=SRC.neck[0],DIR=SRC.scarfDir||-1,swf=p=>Math.max(0,Math.min(1,DIR>0?(p.x-NX)/72:(NX-p.x)/48));   // the tail streams away from the neck
     for(const p of A.scarf){const f=swf(p),dy=Math.round(1.6*f*Math.sin(tc*3.1+p.x*.22)),dx=Math.round(1.2*f*Math.sin(tc*2.4+p.y*.3+1));P(ctx,p.x+dx,p.y+dy,p.c)}
     if(fx.chara)for(let k=0;k<6;k++){const p=A.scarf[(Math.floor(t*6)*31+k*57)%A.scarf.length];if(p){const f=swf(p),dy=Math.round(1.6*f*Math.sin(tc*3.1+p.x*.22));P(ctx,p.x,p.y+dy,"#e6fdff");P(gtx,p.x-1,p.y+dy-1,"#8ff4ff",.7,3,3)}}
-    if(LENS){if(A.star){FXL.star.x=A.star.x;FXL.star.y=A.star.y+d}LENS.render(cv,gv,MKC,t,state,FXL)}
+    if(LENS){if(A.star){FXL.star.x=A.star.x+.5;FXL.star.y=A.star.y+d+.5}LENS.render(cv,gv,MKC,t,state,FXL)}
     else if(fx.dof){dv.style.display="block";dtx.clearRect(0,0,W,rowsEnd);dtx.drawImage(cv,0,0)}else dv.style.display="none";
   }
   return{resize:layout,scroll,frame,showAd:v=>{layout()}};

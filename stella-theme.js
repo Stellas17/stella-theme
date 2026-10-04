@@ -1,7 +1,7 @@
 /* Stella theme for Hatena Blog — header (title-below HTML) + footer (footer HTML).
    Pixel art: AI-generated key visuals re-pixelated to 32 colours. Loads after the markup in the footer HTML. */
 (function(){if(!document.querySelector('link[data-stella-fonts]')){const l=document.createElement('link');l.rel='stylesheet';l.dataset.stellaFonts='1';
-l.href='https://fonts.googleapis.com/css2?family=DotGothic16&family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap';document.head.appendChild(l)}
+l.href='https://fonts.googleapis.com/css2?family=DotGothic16&family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap';document.head.appendChild(l)}
 /* article, archive and About pages: the city becomes a short band so the content is on the first screen; the sidebar is one quiet strip (search, months, subscribe) */
 const st=document.createElement('style');st.dataset.stella='global';st.textContent=
 ':is(body.page-entry,body.page-archive,body.page-about) .stl-hero{height:clamp(190px,16vw,250px)}:is(body.page-entry,body.page-archive,body.page-about) .stl-brand{top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-end}:is(body.page-entry,body.page-archive,body.page-about) .stl-hud{display:none}'+
@@ -831,7 +831,9 @@ left.appendChild(meta);
 left.appendChild($(".entry-title", entry));
 const hs = $$("h3,h4", content).filter(h => h.textContent.trim());
 const chapters = hs.filter(h => h.tagName === "H3").length;
-const chars = content.textContent.replace(/\s/g, "").length;
+// embedded figures carry their own <style>/<script>; only the words count toward the reading time
+const textOnly = content.cloneNode(true); textOnly.querySelectorAll("script,style,noscript").forEach(n => n.remove());
+const chars = textOnly.textContent.replace(/\s/g, "").length;
 // "4章・6見出し": chapters (h3) and all headings (h3 + h4)
 const shape = chapters ? (hs.length > chapters ? `${chapters}章・${hs.length}見出し` : `${chapters}章`) : `${hs.length}見出し`;
 const facts = el("dl", "stl-facts",
@@ -1075,10 +1077,13 @@ body.stl-top #main-inner>article.entry,body.stl-top #main-inner>.pager{display:n
 .stl-pix{position:relative;display:block;aspect-ratio:4/3;max-width:100%;overflow:hidden;background:var(--surface)}
 .stl-pix canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
 .stl-pix::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);pointer-events:none}
-.stl-vf{position:absolute;inset:10px;pointer-events:none;z-index:1;opacity:0;transition:opacity .2s var(--step)}
-.stl-vf::before,.stl-vf::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--c)}
-.stl-vf::before{left:0;top:0;border-right:0;border-bottom:0}.stl-vf::after{right:0;bottom:0;border-left:0;border-top:0}
-.stl-tp a:hover .stl-vf,.stl-tp a:focus-visible .stl-vf{opacity:1}
+/* photo frame: on focus one dot in each corner splits into three and becomes the bracket */
+.stl-vf{position:absolute;inset:10px;pointer-events:none;z-index:1;opacity:0;transition:opacity .08s steps(1,end)}
+.stl-vf::before,.stl-vf::after{content:"";position:absolute;width:4px;height:4px;background:var(--c);box-shadow:0 0 0 var(--c),0 0 0 var(--c);transition:box-shadow .24s steps(3,end) .12s}
+.stl-vf::before{left:0;top:0}.stl-vf::after{right:0;bottom:0}
+.stl-tp a:hover .stl-vf,.stl-tp a:focus-visible .stl-vf,.stl-pix.is-focus .stl-vf{opacity:1}
+.stl-tp a:hover .stl-vf::before,.stl-tp a:focus-visible .stl-vf::before,.stl-pix.is-focus .stl-vf::before{box-shadow:8px 0 0 var(--c),0 8px 0 var(--c)}
+.stl-tp a:hover .stl-vf::after,.stl-tp a:focus-visible .stl-vf::after,.stl-pix.is-focus .stl-vf::after{box-shadow:-8px 0 0 var(--c),0 -8px 0 var(--c)}
 .stl-rows{list-style:none;margin:0;padding:0}
 .stl-row{border-top:1px solid var(--line);margin:0}
 .stl-row:last-child{border-bottom:1px solid var(--line)}
@@ -1098,7 +1103,7 @@ body.stl-top #main-inner>article.entry,body.stl-top #main-inner>.pager{display:n
 .stl-more a:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 18px rgba(70,236,255,.18)}
 @media (max-width:600px){.stl-legend span:nth-child(2){display:none}}
 @media (max-width:820px){.stl-pick{grid-template-columns:1fr;padding:16px}.stl-pick .go{margin-left:auto!important}.stl-feature{grid-template-columns:1fr}.stl-row a{grid-template-columns:minmax(0,1fr) 112px}.stl-row .no,.stl-row p,.stl-tp .head p{display:none}.stl-row a::before{left:-10px}}
-@media (prefers-reduced-motion:reduce){.stl-reveal{clip-path:none}.stl-tip,.stl-tp .go i,.stl-vf,.stl-row a::before{transition:none}}
+@media (prefers-reduced-motion:reduce){.stl-reveal{clip-path:none}.stl-tip,.stl-tp .go i,.stl-vf,.stl-vf::before,.stl-vf::after,.stl-row a::before{transition:none}}
 `;
 document.head.appendChild(el("style", null, css)).dataset.stella = "top";
 B.classList.add("stl-top");
@@ -1126,8 +1131,9 @@ async function loadFeed() {
     for (const e of d.getElementsByTagName("entry")) {
       const ls = [...e.getElementsByTagName("link")], u = ls.find(l => !l.getAttribute("rel")), enc = ls.find(l => l.getAttribute("rel") === "enclosure");
       const c = e.getElementsByTagName("content")[0], p = e.getElementsByTagName("published")[0];
-      const txt = c ? new DOMParser().parseFromString(c.textContent, "text/html").body.textContent.replace(/\s/g, "") : "";
-      if (u) m[u.getAttribute("href")] = { len: txt ? Math.max(1, Math.round(txt.length / 500)) : 0, img: enc ? enc.getAttribute("href") : "", at: p ? new Date(p.textContent) : null };
+      const cd = c ? new DOMParser().parseFromString(c.textContent, "text/html") : null; if (cd) cd.querySelectorAll("script,style,noscript").forEach(n => n.remove());
+      const txt = cd ? cd.body.textContent.replace(/\s/g, "") : "", clean = cd ? cd.body.textContent.replace(/\s+/g, " ").trim() : "";
+      if (u) m[u.getAttribute("href")] = { len: txt ? Math.max(1, Math.round(txt.length / 500)) : 0, img: enc ? enc.getAttribute("href") : "", at: p ? new Date(p.textContent) : null, text: clean };
     }
     return m;
   } catch (e) { return {}; }
@@ -1153,14 +1159,16 @@ function PixPhoto(box, src, owner, { auto = false } = {}) {
   const im = new Image(); im.decoding = "async"; im.onload = () => { img = im; fit(); if (auto || REDUCE) setTimeout(() => go(1), 500); }; im.src = src;
   new ResizeObserver(fit).observe(box);
   // touch screens have no hover: the photo comes into focus while it sits in the middle of the screen
-  if (!auto && !REDUCE && matchMedia("(hover: none)").matches) new IntersectionObserver(es => es.forEach(e => go(e.isIntersecting ? 1 : REST)), { rootMargin: "-30% 0px -30% 0px" }).observe(box);
+  if (!auto && !REDUCE && matchMedia("(hover: none)").matches) new IntersectionObserver(es => es.forEach(e => { go(e.isIntersecting ? 1 : REST); box.classList.toggle("is-focus", e.isIntersecting); }), { rootMargin: "-30% 0px -30% 0px" }).observe(box);
   if (!auto && !REDUCE) { owner.addEventListener("mouseenter", () => go(1)); owner.addEventListener("mouseleave", () => go(REST)); owner.addEventListener("focus", () => go(1)); owner.addEventListener("blur", () => go(REST)); }
 }
 
 /* ---------- build ---------- */
 Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
   if (!posts.length) { restore(); return; }
-  posts.forEach(p => { const f = feed[p.url]; p.len = f && f.len ? f.len : Math.max(1, Math.round(p.desc.length / 120) + 2); p.big = f && f.img ? f.img : p.thumb; if (f && f.at) p.d = f.at; });
+  const CODE = /[{};]\s*[\w-]+\s*:|function\s*\(|\.stl-[ab]\b/;   // a summary that starts with figure CSS/JS
+  posts.forEach(p => { const f = feed[p.url]; if (CODE.test(p.desc.slice(0, 160))) p.desc = f && f.text ? f.text.slice(0, 200) : "";
+    p.len = f && f.len ? f.len : Math.max(1, Math.round(p.desc.length / 120) + 2); p.big = f && f.img ? f.img : p.thumb; if (f && f.at) p.d = f.at; });
   posts.sort((a, b) => b.d - a.d);
   const wrap = el("div", "stl-tp");
   const counts = {}; posts.forEach(p => counts[p.k] = (counts[p.k] || 0) + 1);
@@ -1226,7 +1234,9 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
     sx.font = "10.5px 'JetBrains Mono', monospace"; sx.fillStyle = "#7a7eaa"; sx.textBaseline = "alphabetic";
     { let pm = ""; posts.slice().reverse().forEach(p => { const m = p.d.getFullYear() + "-" + p.d.getMonth(); if (m === pm) return; pm = m; const x = Math.round(p.x); sx.fillRect(x, H - bot + 6, 1, 4); sx.fillText(String(p.d.getMonth() + 1).padStart(2, "0"), x - 6, H - bot + 24); }); }
     // constellations draw in after first view
-    const prog = drawT === null ? 0 : Math.min(1, (t - drawT) / 1.6);
+    // first view: every star flies out of the NOW star to its place (0.9 s each, staggered up to 0.48 s), then the constellations draw in
+    const since = drawT === null ? 0 : t - drawT, GATHER = REDUCE ? 0 : 1.5;
+    const prog = drawT === null ? 0 : Math.min(1, Math.max(0, since - GATHER) / 1.6);
     KEYS.forEach(k => {
       const ps = posts.filter(p => p.k === k).sort((a, b) => a.d - b.d), on = !filter || filter === k; if (ps.length < 2) return;
       sx.strokeStyle = CAT[k][1]; sx.globalAlpha = on ? (filter ? .75 : .38) : .08; sx.lineWidth = 1; sx.beginPath();
@@ -1235,15 +1245,23 @@ Promise.all([loadArchive(), loadFeed()]).then(([posts, feed]) => {
       sx.stroke(); sx.globalAlpha = 1;
     });
     // stars: pixel crosses; size = reading time
+    const n0 = posts[0], ease = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
     posts.forEach((p, i) => {
       const on = !filter || filter === p.k, hv = i === sel || i === hover, col = CAT[p.k][1], tw = .75 + .25 * Math.sin(step * 1.7 + i * 1.3);
+      if (drawT === null && !REDUCE) return;
+      const g = GATHER ? Math.min(1, Math.max(0, (since - .15 - ((i * .618) % 1) * .48) / .9)) : 1;
+      if (g < 1) {   // in flight: a small dot on its way, snapped to 2 px
+        const fx = Math.round((n0.x + (p.x - n0.x) * ease(g)) / 2) * 2, fy = Math.round((n0.y + (p.y - n0.y) * ease(g)) / 2) * 2;
+        if (g > 0) { sx.fillStyle = col; sx.globalAlpha = on ? .9 : .3; sx.fillRect(fx - 1, fy - 1, 3, 3); sx.globalAlpha = 1; }
+        return;
+      }
       const r = Math.round(p.r * (hv ? 1.7 : 1)), q = Math.max(2, Math.round(r / 2)), X = Math.round(p.x), Y = Math.round(p.y);
       sx.save(); sx.globalAlpha = on ? tw : .18; if (on) { sx.shadowColor = col; sx.shadowBlur = hv ? 18 : 8; }
       sx.fillStyle = hv ? "#ffffff" : col; sx.fillRect(X - r, Y - Math.floor(q / 2), r * 2, q); sx.fillRect(X - Math.floor(q / 2), Y - r, q, r * 2);
       sx.fillStyle = "#fff"; sx.fillRect(X - 1, Y - 1, 2, 2); sx.restore();
     });
     // the selected star sits in pixel brackets (the panel below shows it)
-    { const p = posts[sel]; if (p && (!filter || filter === p.k)) { const X = Math.round(p.x), Y = Math.round(p.y), d = Math.round(p.r * 1.7) + 7, L = 6; sx.save(); sx.fillStyle = CAT[p.k][1]; sx.shadowColor = CAT[p.k][1]; sx.shadowBlur = 8;
+    { const p = posts[sel]; if (p && (!filter || filter === p.k) && since >= GATHER) { const X = Math.round(p.x), Y = Math.round(p.y), d = Math.round(p.r * 1.7) + 7, L = 6; sx.save(); sx.fillStyle = CAT[p.k][1]; sx.shadowColor = CAT[p.k][1]; sx.shadowBlur = 8;
       for (const [ax, ay] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const cx = X + ax * d, cy = Y + ay * d; sx.fillRect(ax < 0 ? cx : cx - L, ay < 0 ? cy : cy - 2, L, 2); sx.fillRect(ax < 0 ? cx : cx - 2, ay < 0 ? cy : cy - L, 2, L); } sx.restore(); } }
     // the newest post wears Stella's four-pointed star
     const n = posts[0];
@@ -1351,10 +1369,12 @@ body.stl-arc #main-inner>.archive-header-category,body.stl-arc #main-inner>.arch
 .stl-ar .stl-pix{position:relative;display:block;aspect-ratio:3/2;max-width:100%;overflow:hidden;background:var(--surface)}
 .stl-ar .stl-pix canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
 .stl-ar .stl-pix::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);pointer-events:none}
-.stl-ar .stl-vf{position:absolute;inset:10px;pointer-events:none;z-index:1;opacity:0;transition:opacity .2s var(--step)}
-.stl-ar .stl-vf::before,.stl-ar .stl-vf::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--c)}
-.stl-ar .stl-vf::before{left:0;top:0;border-right:0;border-bottom:0}.stl-ar .stl-vf::after{right:0;bottom:0;border-left:0;border-top:0}
-.stl-ar a:hover .stl-vf,.stl-ar a:focus-visible .stl-vf{opacity:1}
+.stl-ar .stl-vf{position:absolute;inset:10px;pointer-events:none;z-index:1;opacity:0;transition:opacity .08s steps(1,end)}
+.stl-ar .stl-vf::before,.stl-ar .stl-vf::after{content:"";position:absolute;width:4px;height:4px;background:var(--c);box-shadow:0 0 0 var(--c),0 0 0 var(--c);transition:box-shadow .24s steps(3,end) .12s}
+.stl-ar .stl-vf::before{left:0;top:0}.stl-ar .stl-vf::after{right:0;bottom:0}
+.stl-ar a:hover .stl-vf,.stl-ar a:focus-visible .stl-vf,.stl-ar .stl-pix.is-focus .stl-vf{opacity:1}
+.stl-ar a:hover .stl-vf::before,.stl-ar a:focus-visible .stl-vf::before,.stl-ar .stl-pix.is-focus .stl-vf::before{box-shadow:8px 0 0 var(--c),0 8px 0 var(--c)}
+.stl-ar a:hover .stl-vf::after,.stl-ar a:focus-visible .stl-vf::after,.stl-ar .stl-pix.is-focus .stl-vf::after{box-shadow:-8px 0 0 var(--c),0 -8px 0 var(--c)}
 .stl-ar .stl-reveal{clip-path:inset(0 0 100% 0);transition:clip-path .5s var(--step)}
 .stl-ar .stl-reveal.in{clip-path:inset(0 0 0 0)}
 .stl-ar .empty{padding-block:40px;color:var(--muted)}
@@ -1362,7 +1382,7 @@ body.stl-arc .pager{max-width:76rem;justify-content:center;gap:40px}
 body.stl-arc .pager a{border:1px solid var(--line2);padding:12px 26px;letter-spacing:.16em}
 body.stl-arc .pager a:hover{border-color:var(--cyan);color:var(--cyan)}
 @media (max-width:820px){.stl-ar .stl-row a{grid-template-columns:minmax(0,1fr) 112px}.stl-ar .stl-row .no,.stl-ar .stl-row p{display:none}.stl-ar .stl-row a::before{left:-10px}.stl-ar .head{flex-direction:column;gap:10px}}
-@media (prefers-reduced-motion:reduce){.stl-ar .stl-reveal{clip-path:none}.stl-ar .stl-vf,.stl-ar .stl-row a::before{transition:none}}
+@media (prefers-reduced-motion:reduce){.stl-ar .stl-reveal{clip-path:none}.stl-ar .stl-vf,.stl-ar .stl-vf::before,.stl-ar .stl-vf::after,.stl-ar .stl-row a::before{transition:none}}
 `;
 
 /* ---------- read Hatena's list ---------- */
@@ -1371,7 +1391,7 @@ const posts = $$("section.archive-entry", list).map(s => {
   if (!a) return null;
   const m = th && (th.getAttribute("style") || "").match(/url\(['"]?([^'")]+)/);
   const cat = c ? c.textContent.trim() : "";
-  return { url: a.href, t: a.textContent.trim(), d: t ? t.getAttribute("datetime") : "", cat, k: keyOf(cat), thumb: m ? m[1] : "", desc: ds ? ds.textContent.trim().replace(/\s+/g, " ") : "" };
+  return { url: a.href, t: a.textContent.trim(), d: t ? t.getAttribute("datetime") : "", cat, k: keyOf(cat), thumb: m ? m[1] : "", desc: ds && !/[{};]\s*[\w-]+\s*:|function\s*\(|\.stl-[ab]\b/.test(ds.textContent.slice(0, 160)) ? ds.textContent.trim().replace(/\s+/g, " ") : "" };
 }).filter(Boolean);
 
 /* ---------- heading: which list is this ---------- */
@@ -1414,7 +1434,7 @@ function PixPhoto(box, src, owner) {
   if (!src) { c.remove(); box.classList.add("none"); return; }
   const im = new Image(); im.decoding = "async"; im.onload = () => { img = im; fit(); if (REDUCE) go(1); }; im.src = src;
   new ResizeObserver(fit).observe(box);
-  if (!REDUCE && matchMedia("(hover: none)").matches) new IntersectionObserver(es => es.forEach(e => go(e.isIntersecting ? 1 : REST)), { rootMargin: "-30% 0px -30% 0px" }).observe(box);
+  if (!REDUCE && matchMedia("(hover: none)").matches) new IntersectionObserver(es => es.forEach(e => { go(e.isIntersecting ? 1 : REST); box.classList.toggle("is-focus", e.isIntersecting); }), { rootMargin: "-30% 0px -30% 0px" }).observe(box);
   if (!REDUCE) { owner.addEventListener("mouseenter", () => go(1)); owner.addEventListener("mouseleave", () => go(REST)); owner.addEventListener("focus", () => go(1)); owner.addEventListener("blur", () => go(REST)); }
 }
 $$(".stl-row", wrap).forEach((li, i) => { const a = $("a", li); PixPhoto($(".stl-pix", a), posts[i].thumb, a); });
@@ -1500,8 +1520,9 @@ body.stl-abt #main-inner>article.entry{display:none}
 .stl-ab .grid{display:grid;grid-template-columns:17rem minmax(0,40rem);gap:clamp(32px,6vw,96px);padding-block:48px 24px;align-items:start}
 .stl-ab .card{position:sticky;top:24px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(18,16,31,.92),rgba(11,10,20,.55));padding:26px 24px 24px}
 .stl-ab .ava{position:relative;display:block;width:128px;height:128px;margin:0 0 20px;background:#06050d}
-.stl-ab .ava img{display:block;width:100%;height:100%;image-rendering:pixelated;animation:stl-ab-scan .7s steps(8,end) .15s both}
-@keyframes stl-ab-scan{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+.stl-ab .ava img{display:block;width:100%;height:100%;image-rendering:pixelated}
+.stl-ab .ava.assembling img{visibility:hidden}
+.stl-ab .ava canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none}
 .stl-ab .ava::before,.stl-ab .ava::after{content:"";position:absolute;width:12px;height:12px;border:2px solid var(--cyan);pointer-events:none}
 .stl-ab .ava::before{left:-7px;top:-7px;border-right:0;border-bottom:0}.stl-ab .ava::after{right:-7px;bottom:-7px;border-left:0;border-top:0}
 .stl-ab .nm{margin:0;font-family:var(--f-pixel);font-size:22px;line-height:1.3;letter-spacing:.08em;color:var(--white)}
@@ -1537,7 +1558,6 @@ body.stl-abt #main-inner>article.entry{display:none}
   .stl-ab .card .cats{display:none}
   .stl-ab .cats.after{display:flex;margin-top:40px}
 }
-@media (prefers-reduced-motion:reduce){.stl-ab .ava img{animation:none}}
 `;
 document.head.appendChild(Object.assign(document.createElement("style"), { textContent: css })).dataset.stella = "about";
 
@@ -1554,4 +1574,38 @@ if (text) $(".txt", wrap).appendChild(text);
 $(".txt", wrap).insertAdjacentHTML("beforeend", `<nav class="cats after" aria-label="カテゴリ">${KEYS.map(k => `<a class="c-${k}" href="/archive/category/${encodeURIComponent(CAT[k][0])}">${CAT[k][0]}</a>`).join("")}</nav>`);
 main.prepend(wrap);
 B.classList.add("stl-abt");
+
+/* the icon assembles once: its 32×32 tiles start as the dots of Stella's four-pointed star and fly into place (about 1 s) */
+(function assemble() {
+  const box = $(".ava", wrap), img = box && $("img", box);
+  if (!img || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  box.classList.add("assembling");
+  const giveUp = setTimeout(() => box.classList.remove("assembling"), 1800);
+  const run = () => {
+    clearTimeout(giveUp);
+    const S = box.clientWidth, dpr = Math.min(2, devicePixelRatio || 1), G = 32, cv = document.createElement("canvas"), x = cv.getContext("2d");
+    if (!S || !img.naturalWidth) { box.classList.remove("assembling"); return; }
+    cv.width = cv.height = Math.round(S * dpr); box.appendChild(cv); x.imageSmoothingEnabled = false; x.scale(dpr, dpr);
+    const tile = S / G, src = img.naturalWidth / G, c0 = S / 2, R = S * .46, tiles = [];
+    let seed = 11; const rnd = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
+    const inStar = (px, py) => { const dx = Math.abs(px - c0), dy = Math.abs(py - c0); return dx / R + dy / (R * .16) <= 1 || dy / R + dx / (R * .16) <= 1 || dx + dy <= R * .3; };
+    for (let gy = 0; gy < G; gy++) for (let gx = 0; gx < G; gx++) {
+      let sx, sy, k = 0; do { sx = rnd() * S; sy = rnd() * S; } while (!inStar(sx, sy) && ++k < 40);
+      tiles.push({ gx, gy, sx, sy, d: rnd() * .48 });
+    }
+    const ease = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2, t0 = performance.now();
+    (function frame(now) {
+      const t = (now - t0) / 1000; x.clearRect(0, 0, S, S); let done = true;
+      for (const p of tiles) {
+        const k = Math.min(1, Math.max(0, (t - .2 - p.d) / .9)), e = ease(k); if (k < 1) done = false;
+        const px = Math.round((p.sx + (p.gx * tile - p.sx) * e) * dpr / 2) * 2 / dpr, py = Math.round((p.sy + (p.gy * tile - p.sy) * e) * dpr / 2) * 2 / dpr;
+        if (k < .5) { x.globalAlpha = 1; x.fillStyle = "#bef8ff"; x.fillRect(px, py, Math.max(1, tile * .6), Math.max(1, tile * .6)); }
+        x.globalAlpha = Math.min(1, k * 2); x.drawImage(img, p.gx * src, p.gy * src, src, src, px, py, tile + .5, tile + .5);
+      }
+      x.globalAlpha = 1;
+      if (!done && t < 2.5) requestAnimationFrame(frame); else { box.classList.remove("assembling"); cv.remove(); }
+    })(t0);
+  };
+  if (img.complete && img.naturalWidth) run(); else { img.addEventListener("load", run, { once: true }); img.addEventListener("error", () => box.classList.remove("assembling"), { once: true }); }
+})();
 })();

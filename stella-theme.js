@@ -6,6 +6,8 @@ l.href='https://fonts.googleapis.com/css2?family=DotGothic16&family=JetBrains+Mo
 const st=document.createElement('style');st.dataset.stella='global';st.textContent=
 ':is(body.page-entry,body.page-archive,body.page-about) .stl-hero{height:clamp(190px,16vw,250px)}:is(body.page-entry,body.page-archive,body.page-about) .stl-brand{top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-end}:is(body.page-entry,body.page-archive,body.page-about) .stl-hud{display:none}'+
 '.hatena-module-recent-entries,.hatena-module-links{display:none!important}'+
+/* footer credits: the way back to Hatena Blog (its own header and footer are hidden) */
+'.stl-colophon a{color:inherit;text-decoration:none;border-bottom:1px solid #3a3460;padding-bottom:1px;transition:color .2s cubic-bezier(.2,.7,.2,1),border-color .2s cubic-bezier(.2,.7,.2,1)}.stl-colophon a:hover,.stl-colophon a:focus-visible{color:#46ecff;border-color:#46ecff;outline:0}'+
 /* the city fades in over the still picture painted by the design CSS (or over the night gradient if that is not set) */
 '.stl-hero .stl-lens{opacity:0;transition:opacity .6s ease;image-rendering:auto}.stl-hero.stl-ready .stl-lens{opacity:1}'+
 /* article pages: keep the logo and tagline above the menu */
@@ -945,6 +947,16 @@ if (useRoute) {
 } else body.classList.add("no-route");
 body.append(content);
 if (footer) body.append(footer);
+/* Hatena star: on hover its iframe grows upward from the old 24px icon into a balloon. Our chip is taller,
+   so pin the iframe's icon row to the top of the chip and let the balloon sit fully above it */
+(function starFit(n) {
+  const h = document.querySelector("[data-hatena-star]"), sr = h && h.shadowRoot;
+  if (!sr || !sr.querySelector("[part=star-button-container]")) { if (n < 40) setTimeout(() => starFit(n + 1), 250); return; }
+  if (sr.querySelector("style[data-stella]")) return;
+  const s = document.createElement("style"); s.dataset.stella = "star";
+  s.textContent = "[part=star-button-container]>iframe{bottom:calc(100% - 24px)!important;left:-1px!important}";
+  sr.appendChild(s);
+})(0);
 
 let lockI = -1, lockT = 0;
 function updRoute() {

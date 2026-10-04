@@ -1646,3 +1646,58 @@ B.classList.add("stl-abt");
   if (img.complete && img.naturalWidth) run(); else { img.addEventListener("load", run, { once: true }); img.addEventListener("error", () => box.classList.remove("assembling"), { once: true }); }
 })();
 })();
+
+/* Stella — X：About のカード・記事末の共有・フッタのクレジット行に、Xへのリンクを足す（v1.0.3）。
+   外部スクリプトは読み込まない。ただのリンク。 */
+(() => {
+"use strict";
+const HANDLE = "Stella_s777", URL_X = "https://x.com/" + HANDLE;
+const B = document.body;
+if (!B || B.dataset.stlXinit) return;
+B.dataset.stlXinit = "1";
+const mk = (txt, label) => {
+  const a = document.createElement("a");
+  a.href = URL_X; a.target = "_blank"; a.rel = "noopener me";
+  a.textContent = txt; a.dataset.stlX = "1";
+  if (label) a.setAttribute("aria-label", label);
+  return a;
+};
+const put = () => {
+  let n = 0;
+  /* 1. フッタのクレジット行：「はてなブログ トップへ」の前 */
+  const colo = document.querySelector(".stl-colophon");
+  if (colo && !colo.querySelector("[data-stl-x]")) {
+    const a = mk("X @" + HANDLE, "Stella の X アカウント（新しいタブで開く）");
+    const last = colo.querySelector("a");
+    last ? colo.insertBefore(a, last) : colo.appendChild(a);
+    n++;
+  }
+  /* 2. About のカード：名前の下 */
+  const nm = document.querySelector(".stl-ab .card .nm");
+  if (nm && !document.querySelector(".stl-ab [data-stl-x]")) {
+    const p = document.createElement("p");
+    p.className = "mt";
+    p.appendChild(mk("X @" + HANDLE, "Stella の X アカウント（新しいタブで開く）"));
+    nm.parentElement.appendChild(p);
+    n++;
+  }
+  /* 3. 記事末の共有：「X でポスト」の次に「X でフォロー」。ポストには via を付ける */
+  const sh = document.querySelector(".stl-share");
+  if (sh && !sh.querySelector("[data-stl-x]")) {
+    const post = [...sh.querySelectorAll("a")].find(a => /\/intent\/(tweet|post)/.test(a.href));
+    if (post) {
+      try { const u = new URL(post.href); if (!u.searchParams.has("via")) { u.searchParams.set("via", HANDLE); post.href = u.toString(); } } catch (e) {}
+      post.after(mk("X でフォロー", "Stella の X アカウントをフォロー（新しいタブで開く）"));
+    } else sh.querySelector(".lab") && sh.querySelector(".lab").after(mk("X でフォロー"));
+    n++;
+  }
+  return n;
+};
+put();
+/* 他の部品が少し遅れて作る場合のために、数秒だけ待つ */
+if (B.classList.contains("page-about") || B.classList.contains("page-entry")) {
+  const mo = new MutationObserver(() => { put(); });
+  mo.observe(B, { childList: true, subtree: true });
+  setTimeout(() => mo.disconnect(), 4000);
+}
+})();
